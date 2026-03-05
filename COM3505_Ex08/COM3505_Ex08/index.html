@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>COM3505 Internet of Things - Exercise 7 & 8</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            margin: 30px;
+        }
+
+        h1 {
+            color: #1f5fbf;
+        }
+
+        .card {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .highlight {
+            color: #d62d20;
+            font-weight: bold;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            margin-top: 10px;
+        }
+
+        code {
+            background-color: #eeeeee;
+            display: block;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>COM3505 Internet of Things - Exercise 7 & 8</h1>
+
+    <div class="card">
+        <div class="section-title">ESP32 Submission Data</div>
+        <p>Email: <span class="highlight">ybazhar1@sheffield.ac.uk</span></p>
+        <p>MAC Address: <span class="highlight">DC:54:75:C6:DE:5C</span></p>
+        <p>This data is sent by the ESP32 to the server via GET request.</p>
+    </div>
+
+    <div class="card">
+        <div class="section-title">Exercise Details</div>
+        <ul>
+            <li><strong>Ex07:</strong> Utilities for generating HTML from ESP32, templating pages dynamically.</li>
+            <li><strong>Ex08:</strong> ESP32 as a web client sending email & MAC address to the server.</li>
+            <li><strong>Ex09:</strong> Connecting ESP32 to arbitrary Wi-Fi networks and allowing user provisioning.</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <div class="section-title">Server Response</div>
+        <p>The server should respond with a confirmation message when the ESP32 sends data.</p>
+
+<code>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;COM3505 IoT - ESP32 Confirmation&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h2&gt;Submission Received&lt;/h2&gt;
+    &lt;p&gt;Email: po.yang@sheffield.ac.uk&lt;/p&gt;
+    &lt;p&gt;MAC: DC:54:75:C6:DE:5C&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code>
+
+    </div>
+
+</body>
+</html>
