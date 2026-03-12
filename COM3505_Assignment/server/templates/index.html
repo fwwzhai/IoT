@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COM3505 Assignment Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">COM3505 Assignment</p>
+      <h1>Ambient Monitoring Dashboard</h1>
+      <p class="subhead">Fresh assignment workspace. Live values and controls will land here.</p>
+    </header>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Temperature</h2>
+        <p class="metric" id="temperature">--</p>
+      </article>
+      <article class="card">
+        <h2>Light</h2>
+        <p class="metric" id="light">--</p>
+      </article>
+      <article class="card">
+        <h2>Movement</h2>
+        <p class="metric" id="motion">--</p>
+      </article>
+      <article class="card">
+        <h2>Mode</h2>
+        <p class="metric" id="mode">manual</p>
+      </article>
+    </section>
+
+    <section class="card controls">
+      <h2>Pattern Control</h2>
+      <div class="button-row">
+        <button data-pattern="blink">Blink</button>
+        <button data-pattern="chase">Chase</button>
+        <button data-pattern="cycle">Cycle</button>
+        <button data-pattern="alert">Alert</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+

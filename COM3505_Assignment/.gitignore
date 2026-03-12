@@ -1,0 +1,15 @@
+# PlatformIO
+firmware/.pio/
+firmware/.vscode/
+
+# Python
+server/.venv/
+server/__pycache__/
+server/.pytest_cache/
+server/.mypy_cache/
+server/.env
+
+# OS / editor
+Thumbs.db
+.DS_Store
+

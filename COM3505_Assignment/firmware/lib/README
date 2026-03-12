@@ -1,0 +1,6 @@
+
+Project-specific libraries live here.
+
+Use this folder later if the firmware needs reusable modules that should
+not sit directly in `src/`.
+
