@@ -1,6 +1,7 @@
 # PlatformIO
 firmware/.pio/
 firmware/.vscode/
+firmware/include/Secrets.h
 
 # Python
 server/.venv/
@@ -12,4 +13,3 @@ server/.env
 # OS / editor
 Thumbs.db
 .DS_Store
-
