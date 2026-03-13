@@ -1,3 +1,9 @@
+// Network.cpp
+// COM3505 assignment network module
+//
+// This file manages Wi-Fi connection status and provides the placeholder
+// structure for future communication with the Flask backend.
+
 #include "Network.h"
 
 #include "Config.h"
@@ -15,28 +21,71 @@ unsigned long g_lastConnectAttemptMs = 0;
 unsigned long g_lastSyncMs = 0;
 wl_status_t g_lastWifiStatus = WL_IDLE_STATUS;
 
+// ---------------------------------------------------------------------------
+// beginWifiConnection()
+// Start a station-mode connection attempt using the configured credentials.
+// ---------------------------------------------------------------------------
+
 void beginWifiConnection() {
   WiFi.begin(Secrets::WIFI_SSID, Secrets::WIFI_PASSWORD);
 }
+
+// ---------------------------------------------------------------------------
+// canUseRealWifi()
+// Helper for deciding whether we should even attempt a network connection.
+// ---------------------------------------------------------------------------
+
+bool canUseRealWifi() {
+  return Secrets::kHasRealWifiCredentials;
 }
+}
+
+// ---------------------------------------------------------------------------
+// printWifiStatus()
+// Dump the most useful Wi-Fi status details to the serial monitor.
+// ---------------------------------------------------------------------------
+
+void printWifiStatus() {
+  dbg(netDBG, "Wi-Fi status = ");
+  dln(netDBG, static_cast<int>(WiFi.status()));
+
+  if (WiFi.status() == WL_CONNECTED) {
+    dbg(netDBG, "local IP = ");
+    dln(netDBG, WiFi.localIP());
+  }
+}
+
+// ---------------------------------------------------------------------------
+// setupNetwork()
+// Configure station mode and optionally begin Wi-Fi connection.
+// ---------------------------------------------------------------------------
 
 void setupNetwork(DeviceState& state) {
   WiFi.mode(WIFI_STA);
 
-  if (!Secrets::kHasRealWifiCredentials) {
-    Serial.println("Wi-Fi credentials not configured yet.");
-    Serial.println("Create firmware/include/Secrets.h from Secrets.example.h.");
+  dln(startupDBG, "setupNetwork...");
+
+  if (!canUseRealWifi()) {
+    dln(netDBG, "Wi-Fi credentials not configured yet.");
+    dln(netDBG, "Create firmware/include/Secrets.h from Secrets.example.h.");
     state.wifiConnected = false;
     state.serverReachable = false;
     return;
   }
 
-  Serial.printf("Target server: %s\n", Secrets::SERVER_BASE_URL);
-  Serial.printf("Connecting to Wi-Fi SSID: %s\n", Secrets::WIFI_SSID);
+  dbg(netDBG, "target server = ");
+  dln(netDBG, Secrets::SERVER_BASE_URL);
+  dbg(netDBG, "connecting to Wi-Fi SSID = ");
+  dln(netDBG, Secrets::WIFI_SSID);
 
   beginWifiConnection();
   g_lastConnectAttemptMs = millis();
 }
+
+// ---------------------------------------------------------------------------
+// updateNetwork()
+// Track Wi-Fi status and prepare for regular server synchronisation.
+// ---------------------------------------------------------------------------
 
 void updateNetwork(DeviceState& state, unsigned long now) {
   const wl_status_t currentStatus = WiFi.status();
@@ -46,14 +95,15 @@ void updateNetwork(DeviceState& state, unsigned long now) {
     g_lastWifiStatus = currentStatus;
 
     if (state.wifiConnected) {
-      Serial.print("Wi-Fi connected. IP: ");
-      Serial.println(WiFi.localIP());
+      dln(netDBG, "Wi-Fi connected.");
+      printWifiStatus();
     } else {
-      Serial.printf("Wi-Fi status changed: %d\n", currentStatus);
+      dbg(netDBG, "Wi-Fi status changed: ");
+      dln(netDBG, static_cast<int>(currentStatus));
     }
   }
 
-  if (!Secrets::kHasRealWifiCredentials) {
+  if (!canUseRealWifi()) {
     state.serverReachable = false;
     return;
   }
@@ -62,7 +112,7 @@ void updateNetwork(DeviceState& state, unsigned long now) {
     state.serverReachable = false;
 
     if (now - g_lastConnectAttemptMs >= Config::kNetworkReconnectIntervalMs) {
-      Serial.println("Retrying Wi-Fi connection...");
+      dln(netDBG, "Retrying Wi-Fi connection...");
       beginWifiConnection();
       g_lastConnectAttemptMs = now;
     }
@@ -77,6 +127,7 @@ void updateNetwork(DeviceState& state, unsigned long now) {
   g_lastSyncMs = now;
 
   // Placeholder until the API contract is locked and HTTP sync is implemented.
+  dbg(netDBG, "network sync tick to ");
+  dln(netDBG, Secrets::SERVER_BASE_URL);
   state.serverReachable = true;
 }
-

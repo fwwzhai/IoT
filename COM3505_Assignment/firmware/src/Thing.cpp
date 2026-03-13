@@ -1,3 +1,9 @@
+// Thing.cpp
+// COM3505 assignment top-level firmware runner
+//
+// This file is the equivalent of the lab "exercise runner":
+// it owns shared globals, startup sequencing, and the high-level loop.
+
 #include "Thing.h"
 
 #include "Config.h"
@@ -8,7 +14,42 @@
 namespace {
 DeviceState g_deviceState;
 unsigned long g_lastHeartbeatMs = 0;
+
+void printStartupBanner() {
+  dln(startupDBG, "\nsetupThing...");
+  dln(startupDBG, "COM3505 assignment firmware workspace ready.");
+  dln(startupDBG, "Structured as Thing + Sensors + Patterns + Network.");
 }
+
+void printHeartbeat(const DeviceState& state) {
+  dbg(loopDBG, "mode=");
+  dbg(loopDBG, modeName(state.mode));
+  dbg(loopDBG, " pattern=");
+  dbg(loopDBG, patternName(state.pattern));
+  dbg(loopDBG, " wifi=");
+  dbg(loopDBG, state.wifiConnected);
+  dbg(loopDBG, " server=");
+  dbg(loopDBG, state.serverReachable);
+  dbg(loopDBG, " temp=");
+  dbg(loopDBG, state.sensors.temperatureC);
+  dbg(loopDBG, " light=");
+  dbg(loopDBG, state.sensors.lightLevel);
+  dbg(loopDBG, " motion=");
+  dbg(loopDBG, state.sensors.motionDetected);
+  dbg(loopDBG, " loops=");
+  dln(loopDBG, state.loopIteration);
+}
+}
+
+// ---------------------------------------------------------------------------
+// Global debug flag definitions
+// ---------------------------------------------------------------------------
+
+bool startupDBG = true;
+bool loopDBG = true;
+bool sensorDBG = true;
+bool patternDBG = true;
+bool netDBG = true;
 
 DeviceState& thingState() {
   return g_deviceState;
@@ -44,8 +85,7 @@ void setupThing() {
   Serial.begin(115200);
   delay(250);
 
-  Serial.println("\nCOM3505 assignment firmware workspace ready.");
-  Serial.println("Structured as Thing + Sensors + Patterns + Network.");
+  printStartupBanner();
 
   setupSensors();
   setupPatterns();
@@ -63,17 +103,6 @@ void loopThing() {
 
   if (now - g_lastHeartbeatMs >= Config::kHeartbeatIntervalMs) {
     g_lastHeartbeatMs = now;
-    Serial.printf(
-      "mode=%s pattern=%s wifi=%d server=%d temp=%.1f light=%d motion=%d loops=%lu\n",
-      modeName(g_deviceState.mode),
-      patternName(g_deviceState.pattern),
-      g_deviceState.wifiConnected,
-      g_deviceState.serverReachable,
-      g_deviceState.sensors.temperatureC,
-      g_deviceState.sensors.lightLevel,
-      g_deviceState.sensors.motionDetected,
-      g_deviceState.loopIteration
-    );
+    printHeartbeat(g_deviceState);
   }
 }
-
