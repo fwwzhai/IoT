@@ -15,10 +15,12 @@
 #endif
 
 #include <WiFi.h>
+#include <WiFiClient.h>
 
 namespace {
 unsigned long g_lastConnectAttemptMs = 0;
-unsigned long g_lastSyncMs = 0;
+unsigned long g_lastSensorUploadMs = 0;
+unsigned long g_lastControlPollMs = 0;
 wl_status_t g_lastWifiStatus = WL_IDLE_STATUS;
 
 // ---------------------------------------------------------------------------
@@ -37,6 +39,242 @@ void beginWifiConnection() {
 
 bool canUseRealWifi() {
   return Secrets::kHasRealWifiCredentials;
+}
+
+// ---------------------------------------------------------------------------
+// buildSensorPayload()
+// Serialize the most important device and sensor state into a compact JSON
+// string using core Arduino String operations.
+// ---------------------------------------------------------------------------
+
+String buildSensorPayload(const DeviceState& state) {
+  String payload = "{";
+
+  payload += "\"device\":{";
+  payload += "\"mode\":\"";
+  payload += modeName(state.mode);
+  payload += "\",\"pattern\":\"";
+  payload += patternName(state.pattern);
+  payload += "\",\"wifi_connected\":";
+  payload += state.wifiConnected ? "true" : "false";
+  payload += "},";
+
+  payload += "\"sensors\":{";
+  payload += "\"temperature_c\":";
+  payload += String(state.sensors.temperatureC, 1);
+  payload += ",\"light_level\":";
+  payload += String(state.sensors.lightLevel);
+  payload += ",\"motion_detected\":";
+  payload += state.sensors.motionDetected ? "true" : "false";
+  payload += "}";
+
+  payload += "}";
+  return payload;
+}
+
+// ---------------------------------------------------------------------------
+// readHttpResponse()
+// Read the full response from a connected WiFiClient until the connection
+// closes or a timeout is reached.
+// ---------------------------------------------------------------------------
+
+String readHttpResponse(WiFiClient& client) {
+  String response;
+  unsigned long lastDataMs = millis();
+
+  while (millis() - lastDataMs < Config::kSocketTimeoutMs) {
+    while (client.available()) {
+      response += static_cast<char>(client.read());
+      lastDataMs = millis();
+    }
+
+    if (!client.connected() && !client.available()) {
+      break;
+    }
+
+    delay(1);
+  }
+
+  client.stop();
+  return response;
+}
+
+// ---------------------------------------------------------------------------
+// parseStatusCode()
+// Extract the HTTP status code from the status line.
+// ---------------------------------------------------------------------------
+
+int parseStatusCode(const String& response) {
+  const int firstSpace = response.indexOf(' ');
+  if (firstSpace < 0) {
+    return -1;
+  }
+
+  const int secondSpace = response.indexOf(' ', firstSpace + 1);
+  if (secondSpace < 0) {
+    return -1;
+  }
+
+  return response.substring(firstSpace + 1, secondSpace).toInt();
+}
+
+// ---------------------------------------------------------------------------
+// extractResponseBody()
+// Split headers from body using the standard HTTP blank line separator.
+// ---------------------------------------------------------------------------
+
+String extractResponseBody(const String& response) {
+  int bodyStart = response.indexOf("\r\n\r\n");
+  if (bodyStart >= 0) {
+    return response.substring(bodyStart + 4);
+  }
+
+  bodyStart = response.indexOf("\n\n");
+  if (bodyStart >= 0) {
+    return response.substring(bodyStart + 2);
+  }
+
+  return "";
+}
+
+// ---------------------------------------------------------------------------
+// extractJsonString()
+// Lightweight JSON field extraction for simple quoted string values.
+// ---------------------------------------------------------------------------
+
+String extractJsonString(const String& json, const char* key) {
+  const String quotedKey = String("\"") + key + "\"";
+  const int keyPos = json.indexOf(quotedKey);
+  if (keyPos < 0) {
+    return "";
+  }
+
+  const int colonPos = json.indexOf(':', keyPos + quotedKey.length());
+  if (colonPos < 0) {
+    return "";
+  }
+
+  const int firstQuote = json.indexOf('"', colonPos + 1);
+  if (firstQuote < 0) {
+    return "";
+  }
+
+  const int secondQuote = json.indexOf('"', firstQuote + 1);
+  if (secondQuote < 0) {
+    return "";
+  }
+
+  return json.substring(firstQuote + 1, secondQuote);
+}
+
+// ---------------------------------------------------------------------------
+// modeFromString() / patternFromString()
+// Convert JSON string values into internal enums.
+// ---------------------------------------------------------------------------
+
+DeviceMode modeFromString(const String& mode) {
+  return mode == "auto" ? DeviceMode::Auto : DeviceMode::Manual;
+}
+
+PatternId patternFromString(const String& pattern) {
+  if (pattern == "chase") {
+    return PatternId::Chase;
+  }
+
+  if (pattern == "cycle") {
+    return PatternId::Cycle;
+  }
+
+  if (pattern == "alert") {
+    return PatternId::Alert;
+  }
+
+  return PatternId::Blink;
+}
+
+// ---------------------------------------------------------------------------
+// sendRequest()
+// Shared HTTP helper used for both GET and POST requests.
+// ---------------------------------------------------------------------------
+
+int sendRequest(
+  const char* method,
+  const char* path,
+  const String& body,
+  String& responseBody
+) {
+  WiFiClient client;
+
+  if (!client.connect(Secrets::SERVER_HOST, Secrets::SERVER_PORT)) {
+    dln(netDBG, "server connection failed");
+    responseBody = "";
+    return -1;
+  }
+
+  client.print(String(method) + " " + path + " HTTP/1.1\r\n");
+  client.print(String("Host: ") + Secrets::SERVER_HOST + "\r\n");
+  client.print("Connection: close\r\n");
+
+  if (String(method) == "POST") {
+    client.print("Content-Type: application/json\r\n");
+    client.print(String("Content-Length: ") + body.length() + "\r\n");
+  }
+
+  client.print("\r\n");
+
+  if (String(method) == "POST") {
+    client.print(body);
+  }
+
+  const String rawResponse = readHttpResponse(client);
+  responseBody = extractResponseBody(rawResponse);
+  return parseStatusCode(rawResponse);
+}
+
+// ---------------------------------------------------------------------------
+// syncSensorState()
+// Push the current device and sensor state to Flask.
+// ---------------------------------------------------------------------------
+
+bool syncSensorState(const DeviceState& state) {
+  String responseBody;
+  const String payload = buildSensorPayload(state);
+  const int statusCode = sendRequest("POST", "/api/sensor", payload, responseBody);
+
+  dbg(netDBG, "sensor POST status = ");
+  dln(netDBG, statusCode);
+
+  return statusCode == 200;
+}
+
+// ---------------------------------------------------------------------------
+// fetchControlState()
+// Pull the latest mode and pattern selection from Flask.
+// ---------------------------------------------------------------------------
+
+bool fetchControlState(DeviceState& state) {
+  String responseBody;
+  const int statusCode = sendRequest("GET", "/api/state", "", responseBody);
+
+  dbg(netDBG, "state GET status = ");
+  dln(netDBG, statusCode);
+
+  if (statusCode != 200) {
+    return false;
+  }
+
+  const String mode = extractJsonString(responseBody, "mode");
+  const String pattern = extractJsonString(responseBody, "pattern");
+
+  if (mode.length() > 0) {
+    state.mode = modeFromString(mode);
+  }
+
+  if (pattern.length() > 0) {
+    state.pattern = patternFromString(pattern);
+  }
+
+  return true;
 }
 }
 
@@ -75,6 +313,10 @@ void setupNetwork(DeviceState& state) {
 
   dbg(netDBG, "target server = ");
   dln(netDBG, Secrets::SERVER_BASE_URL);
+  dbg(netDBG, "server host = ");
+  dln(netDBG, Secrets::SERVER_HOST);
+  dbg(netDBG, "server port = ");
+  dln(netDBG, Secrets::SERVER_PORT);
   dbg(netDBG, "connecting to Wi-Fi SSID = ");
   dln(netDBG, Secrets::WIFI_SSID);
 
@@ -120,14 +362,22 @@ void updateNetwork(DeviceState& state, unsigned long now) {
     return;
   }
 
-  if (now - g_lastSyncMs < Config::kNetworkSyncIntervalMs) {
-    return;
+  bool requestAttempted = false;
+  bool requestSucceeded = false;
+
+  if (now - g_lastSensorUploadMs >= Config::kSensorUploadIntervalMs) {
+    g_lastSensorUploadMs = now;
+    requestAttempted = true;
+    requestSucceeded = syncSensorState(state) || requestSucceeded;
   }
 
-  g_lastSyncMs = now;
+  if (now - g_lastControlPollMs >= Config::kControlPollIntervalMs) {
+    g_lastControlPollMs = now;
+    requestAttempted = true;
+    requestSucceeded = fetchControlState(state) || requestSucceeded;
+  }
 
-  // Placeholder until the API contract is locked and HTTP sync is implemented.
-  dbg(netDBG, "network sync tick to ");
-  dln(netDBG, Secrets::SERVER_BASE_URL);
-  state.serverReachable = true;
+  if (requestAttempted) {
+    state.serverReachable = requestSucceeded;
+  }
 }

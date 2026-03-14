@@ -23,11 +23,12 @@ constexpr uint8_t kLedGreenPin = 12;
 
 // ---------------------------------------------------------------------------
 // Sensor pins
-// Replace these with the final hardware mapping once the breadboard is fixed.
+// For the current Feather ESP32-S3 target, use the board's analog labels
+// directly so the wiring matches what is printed on the header.
 // ---------------------------------------------------------------------------
 
-constexpr uint8_t kTemperatureSensorPin = 1;
-constexpr uint8_t kLightSensorPin = 2;
+constexpr uint8_t kTemperatureSensorPin = A0;
+constexpr uint8_t kLightSensorPin = A1;
 constexpr uint8_t kMotionSensorPin = 3;
 
 }  // namespace Pins

@@ -11,6 +11,8 @@
 
 namespace {
 unsigned long g_lastSampleMs = 0;
+int g_lastTemperatureRaw = 0;
+float g_lastTemperatureVoltage = 0.0f;
 
 // ---------------------------------------------------------------------------
 // ADC helper
@@ -31,16 +33,25 @@ int readAnalogClamped(uint8_t pin) {
 void setupSensors() {
   analogReadResolution(12);
   analogSetPinAttenuation(Pins::kTemperatureSensorPin, ADC_11db);
-  analogSetPinAttenuation(Pins::kLightSensorPin, ADC_11db);
-  pinMode(Pins::kMotionSensorPin, INPUT_PULLUP);
+
+  if (!Config::kTmp36OnlyFirstTestMode) {
+    analogSetPinAttenuation(Pins::kLightSensorPin, ADC_11db);
+    pinMode(Pins::kMotionSensorPin, INPUT_PULLUP);
+  }
 
   dln(startupDBG, "setupSensors...");
   dbg(startupDBG, "temperature pin = ");
   dln(startupDBG, Pins::kTemperatureSensorPin);
-  dbg(startupDBG, "light pin = ");
-  dln(startupDBG, Pins::kLightSensorPin);
-  dbg(startupDBG, "motion pin = ");
-  dln(startupDBG, Pins::kMotionSensorPin);
+
+  if (Config::kTmp36OnlyFirstTestMode) {
+    dln(startupDBG, "TMP36-only first-test mode enabled.");
+    dln(startupDBG, "Light and motion inputs are disabled for bring-up.");
+  } else {
+    dbg(startupDBG, "light pin = ");
+    dln(startupDBG, Pins::kLightSensorPin);
+    dbg(startupDBG, "motion pin = ");
+    dln(startupDBG, Pins::kMotionSensorPin);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -56,6 +67,9 @@ float readTemperatureC() {
     Config::kAnalogReferenceVolts /
     Config::kAdcMax;
 
+  g_lastTemperatureRaw = temperatureRaw;
+  g_lastTemperatureVoltage = voltage;
+
   return (voltage - 0.5f) * 100.0f;
 }
 
@@ -65,6 +79,10 @@ float readTemperatureC() {
 // ---------------------------------------------------------------------------
 
 int readLightLevel() {
+  if (Config::kTmp36OnlyFirstTestMode) {
+    return 4095;
+  }
+
   return readAnalogClamped(Pins::kLightSensorPin);
 }
 
@@ -74,6 +92,10 @@ int readLightLevel() {
 // ---------------------------------------------------------------------------
 
 bool readMotionDetected() {
+  if (Config::kTmp36OnlyFirstTestMode) {
+    return false;
+  }
+
   return digitalRead(Pins::kMotionSensorPin) == LOW;
 }
 
@@ -83,7 +105,11 @@ bool readMotionDetected() {
 // ---------------------------------------------------------------------------
 
 void printSensorSnapshot(const SensorState& sensorState) {
-  dbg(sensorDBG, "sensor snapshot: temp=");
+  dbg(sensorDBG, "sensor snapshot: raw=");
+  dbg(sensorDBG, g_lastTemperatureRaw);
+  dbg(sensorDBG, " volts=");
+  dbg(sensorDBG, g_lastTemperatureVoltage);
+  dbg(sensorDBG, " temp=");
   dbg(sensorDBG, sensorState.temperatureC);
   dbg(sensorDBG, " light=");
   dbg(sensorDBG, sensorState.lightLevel);

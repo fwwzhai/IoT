@@ -1,9 +1,12 @@
 # PlatformIO
 firmware/.pio/
+firmware/.platformio-local/
+firmware/firmware/
 firmware/.vscode/
 firmware/include/Secrets.h
 
 # Python
+.pylibs/
 server/.venv/
 server/__pycache__/
 server/.pytest_cache/

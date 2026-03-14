@@ -9,42 +9,123 @@
 <body>
   <main class="shell">
     <header class="hero">
-      <p class="eyebrow">COM3505 Assignment</p>
-      <h1>Ambient Monitoring Dashboard</h1>
-      <p class="subhead">Fresh assignment workspace. Live values and controls will land here.</p>
+      <div>
+        <p class="eyebrow">COM3505 Assignment</p>
+        <h1>Ambient Monitoring Dashboard</h1>
+        <p class="subhead">
+          Live environmental telemetry, visual alert patterns, and a mobile-ready
+          interface for manual or automated control.
+        </p>
+      </div>
+      <div class="status-cluster">
+        <span class="status-pill" id="health-pill">Offline</span>
+        <p class="status-note" id="last-seen">Waiting for device</p>
+      </div>
     </header>
 
-    <section class="grid">
-      <article class="card">
-        <h2>Temperature</h2>
+    <section class="metrics-grid">
+      <article class="card metric-card">
+        <p class="card-label">Temperature</p>
         <p class="metric" id="temperature">--</p>
+        <p class="metric-note" id="temperature-note">Awaiting sensor data</p>
       </article>
-      <article class="card">
-        <h2>Light</h2>
+
+      <article class="card metric-card">
+        <p class="card-label">Light</p>
         <p class="metric" id="light">--</p>
+        <p class="metric-note">Raw ADC level</p>
       </article>
-      <article class="card">
-        <h2>Movement</h2>
+
+      <article class="card metric-card">
+        <p class="card-label">Movement</p>
         <p class="metric" id="motion">--</p>
+        <p class="metric-note">Optional digital trigger</p>
       </article>
-      <article class="card">
-        <h2>Mode</h2>
-        <p class="metric" id="mode">manual</p>
+
+      <article class="card metric-card">
+        <p class="card-label">Device State</p>
+        <p class="metric compact" id="mode">manual</p>
+        <p class="metric-note" id="pattern-name">Pattern: blink</p>
       </article>
     </section>
 
-    <section class="card controls">
-      <h2>Pattern Control</h2>
-      <div class="button-row">
-        <button data-pattern="blink">Blink</button>
-        <button data-pattern="chase">Chase</button>
-        <button data-pattern="cycle">Cycle</button>
-        <button data-pattern="alert">Alert</button>
-      </div>
+    <section class="content-grid">
+      <article class="card chart-card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow small">Live History</p>
+            <h2>Sensor Trends</h2>
+          </div>
+          <div class="legend">
+            <span><i class="legend-swatch temperature"></i>Temperature</span>
+            <span><i class="legend-swatch light"></i>Light</span>
+          </div>
+        </div>
+        <div class="chart-frame" id="chart-frame">
+          <canvas id="history-chart" width="920" height="320" aria-label="Sensor history chart"></canvas>
+          <div class="chart-tooltip" id="chart-tooltip" hidden></div>
+        </div>
+      </article>
+
+      <aside class="side-stack">
+        <article class="card control-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow small">Mode</p>
+              <h2>Automation</h2>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <button class="mode-button" data-mode="manual">Manual</button>
+            <button class="mode-button" data-mode="auto">Auto</button>
+          </div>
+          <p class="control-note">
+            Auto mode maps current sensor thresholds to alert patterns. Manual mode
+            hands pattern selection back to the user.
+          </p>
+        </article>
+
+        <article class="card control-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow small">Patterns</p>
+              <h2>LED Behaviour</h2>
+            </div>
+          </div>
+          <div class="button-grid">
+            <button data-pattern="blink">Blink</button>
+            <button data-pattern="chase">Chase</button>
+            <button data-pattern="cycle">Cycle</button>
+            <button data-pattern="alert">Alert</button>
+          </div>
+        </article>
+
+        <article class="card status-card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow small">Health</p>
+              <h2>Device Link</h2>
+            </div>
+          </div>
+          <dl class="status-list">
+            <div>
+              <dt>Wi-Fi</dt>
+              <dd id="wifi-state">offline</dd>
+            </div>
+            <div>
+              <dt>Backend</dt>
+              <dd id="backend-state">offline</dd>
+            </div>
+            <div>
+              <dt>Last Seen</dt>
+              <dd id="last-seen-detail">--</dd>
+            </div>
+          </dl>
+        </article>
+      </aside>
     </section>
   </main>
 
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
-

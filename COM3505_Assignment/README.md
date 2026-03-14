@@ -24,3 +24,36 @@ The structure follows the lab-style PlatformIO layout for firmware, with separat
 - This workspace is intentionally separate from the lab exercises.
 - The labs are reference material for style and learned techniques only.
 - The product direction is defined in the repo-level `ASSIGNMENT_PRD.md`.
+
+## Quick Start
+
+### Flask dashboard
+
+1. Open `COM3505_Assignment/server`
+2. Install dependencies:
+   `python -m pip install --user -r requirements.txt`
+3. Run the server:
+   `python app.py`
+4. Open:
+   `http://127.0.0.1:5000`
+
+### ESP32 firmware
+
+1. Copy `firmware/include/Secrets.example.h` to `firmware/include/Secrets.h`
+2. Set:
+   - `kHasRealWifiCredentials = true`
+   - your Wi-Fi SSID/password
+   - your laptop IPv4 address as `SERVER_HOST`
+3. Wire the current bring-up hardware:
+   - TMP36 middle leg -> `A0`
+   - red LED -> `GPIO6`
+   - yellow LED -> `GPIO9`
+   - green LED -> `GPIO12`
+4. Build from `COM3505_Assignment/firmware`:
+   `pio run`
+
+## Current Bring-Up Mode
+
+- The firmware is currently in `TMP36-only first-test mode`
+- Light and motion inputs are stubbed during bring-up
+- Dashboard graph, controls, and server sync are live

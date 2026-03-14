@@ -12,14 +12,23 @@
 namespace Config {
 
 // ---------------------------------------------------------------------------
+// Bring-up mode
+// Enable this while testing with TMP36 + 3 LEDs only.
+// ---------------------------------------------------------------------------
+
+constexpr bool kTmp36OnlyFirstTestMode = true;
+
+// ---------------------------------------------------------------------------
 // Timing configuration
 // ---------------------------------------------------------------------------
 
 constexpr unsigned long kHeartbeatIntervalMs = 1000;
 constexpr unsigned long kSensorSampleIntervalMs = 2000;
 constexpr unsigned long kNetworkReconnectIntervalMs = 10000;
-constexpr unsigned long kNetworkSyncIntervalMs = 2000;
+constexpr unsigned long kSensorUploadIntervalMs = 2000;
+constexpr unsigned long kControlPollIntervalMs = 500;
 constexpr unsigned long kAnimationIntervalMs = 250;
+constexpr unsigned long kSocketTimeoutMs = 3000;
 
 // ---------------------------------------------------------------------------
 // ADC conversion constants
@@ -33,8 +42,8 @@ constexpr float kAdcMax = 4095.0f;
 // These are starting values only and should be tuned after hardware tests.
 // ---------------------------------------------------------------------------
 
-constexpr float kTemperatureWarningC = 28.0f;
-constexpr float kTemperatureAlertC = 32.0f;
+constexpr float kTemperatureWarningC = 21.0f;
+constexpr float kTemperatureAlertC = 17.0f;
 constexpr int kLightWarningLevel = 1800;
 constexpr int kLightAlertLevel = 900;
 
