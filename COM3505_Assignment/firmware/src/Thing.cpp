@@ -76,6 +76,10 @@ const char* patternName(PatternId pattern) {
       return "cycle";
     case PatternId::Alert:
       return "alert";
+    case PatternId::Pulse:
+      return "pulse";
+    case PatternId::Heartbeat:
+      return "heartbeat";
     default:
       return "unknown";
   }

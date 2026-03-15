@@ -189,6 +189,14 @@ PatternId patternFromString(const String& pattern) {
     return PatternId::Alert;
   }
 
+  if (pattern == "pulse") {
+    return PatternId::Pulse;
+  }
+
+  if (pattern == "heartbeat") {
+    return PatternId::Heartbeat;
+  }
+
   return PatternId::Blink;
 }
 

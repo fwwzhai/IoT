@@ -28,6 +28,10 @@ unsigned long animationIntervalFor(PatternId pattern) {
       return 180;
     case PatternId::Cycle:
       return 350;
+    case PatternId::Pulse:
+      return 170;
+    case PatternId::Heartbeat:
+      return 130;
     case PatternId::Blink:
     default:
       return Config::kAnimationIntervalMs;
@@ -147,6 +151,38 @@ void stepAlertPattern(DeviceState& state) {
   }
 }
 
+void stepPulsePattern(DeviceState& state) {
+  switch (g_animationStep % 5) {
+    case 0:
+      clearLedBuffer(state.leds);
+      break;
+    case 1:
+      setBuffer(state, 0, 255, 0);
+      break;
+    case 2:
+      setBuffer(state, 255, 255, 255);
+      break;
+    case 3:
+      setBuffer(state, 0, 255, 0);
+      break;
+    default:
+      clearLedBuffer(state.leds);
+      break;
+  }
+}
+
+void stepHeartbeatPattern(DeviceState& state) {
+  switch (g_animationStep % 8) {
+    case 0:
+    case 2:
+      setBuffer(state, 255, 0, 0);
+      break;
+    default:
+      clearLedBuffer(state.leds);
+      break;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // stepPattern()
 // Dispatch to the current animation implementation.
@@ -168,6 +204,14 @@ void stepPattern(DeviceState& state) {
 
     case PatternId::Alert:
       stepAlertPattern(state);
+      break;
+
+    case PatternId::Pulse:
+      stepPulsePattern(state);
+      break;
+
+    case PatternId::Heartbeat:
+      stepHeartbeatPattern(state);
       break;
   }
 

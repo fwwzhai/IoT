@@ -5,7 +5,7 @@ from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
 MAX_HISTORY_POINTS = 120
-VALID_PATTERNS = {"blink", "chase", "cycle", "alert"}
+VALID_PATTERNS = {"blink", "chase", "cycle", "alert", "pulse", "heartbeat"}
 VALID_MODES = {"manual", "auto"}
 
 STATE = {

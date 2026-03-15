@@ -37,6 +37,8 @@ enum class PatternId : uint8_t {
   Chase,
   Cycle,
   Alert,
+  Pulse,
+  Heartbeat,
 };
 
 // ---------------------------------------------------------------------------
