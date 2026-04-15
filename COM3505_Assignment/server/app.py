@@ -19,7 +19,7 @@ STATE = {
     "sensors": {
         "temperature_c": None,
         "light_level": None,
-        "motion_detected": None,
+        "button_pressed": None,
     },
 }
 HISTORY = deque(maxlen=MAX_HISTORY_POINTS)
@@ -78,7 +78,7 @@ def post_sensor():
 
     STATE["sensors"]["temperature_c"] = sensors.get("temperature_c")
     STATE["sensors"]["light_level"] = sensors.get("light_level")
-    STATE["sensors"]["motion_detected"] = sensors.get("motion_detected")
+    STATE["sensors"]["button_pressed"] = sensors.get("button_pressed")
 
     if "mode" in device:
         STATE["device"]["mode"] = device["mode"]
@@ -96,7 +96,7 @@ def post_sensor():
             "timestamp": STATE["device"]["last_seen"],
             "temperature_c": STATE["sensors"]["temperature_c"],
             "light_level": STATE["sensors"]["light_level"],
-            "motion_detected": STATE["sensors"]["motion_detected"],
+            "button_pressed": STATE["sensors"]["button_pressed"],
         }
     )
     update_health_state()

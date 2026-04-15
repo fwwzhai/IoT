@@ -14,11 +14,55 @@
 namespace {
 DeviceState g_deviceState;
 unsigned long g_lastHeartbeatMs = 0;
+bool g_lastButtonPressed = false;
+unsigned long g_lastButtonEdgeMs = 0;
 
 void printStartupBanner() {
   dln(startupDBG, "\nsetupThing...");
   dln(startupDBG, "COM3505 assignment firmware workspace ready.");
   dln(startupDBG, "Structured as Thing + Sensors + Patterns + Network.");
+}
+
+PatternId nextPattern(PatternId pattern) {
+  switch (pattern) {
+    case PatternId::Blink:
+      return PatternId::Chase;
+    case PatternId::Chase:
+      return PatternId::Cycle;
+    case PatternId::Cycle:
+      return PatternId::Alert;
+    case PatternId::Alert:
+      return PatternId::Pulse;
+    case PatternId::Pulse:
+      return PatternId::Heartbeat;
+    case PatternId::Heartbeat:
+    default:
+      return PatternId::Blink;
+  }
+}
+
+void handleLocalButtonControls(DeviceState& state, unsigned long now) {
+  const bool buttonPressed = state.sensors.buttonPressed;
+
+  if (
+    buttonPressed &&
+    !g_lastButtonPressed &&
+    state.mode == DeviceMode::Manual &&
+    now - g_lastButtonEdgeMs >= Config::kButtonDebounceMs
+  ) {
+    state.pattern = nextPattern(state.pattern);
+    state.localControlDirty = true;
+    g_lastButtonEdgeMs = now;
+
+    dbg(patternDBG, "local button cycle -> ");
+    dln(patternDBG, patternName(state.pattern));
+  }
+
+  if (buttonPressed != g_lastButtonPressed) {
+    g_lastButtonEdgeMs = now;
+  }
+
+  g_lastButtonPressed = buttonPressed;
 }
 
 void printHeartbeat(const DeviceState& state) {
@@ -34,8 +78,8 @@ void printHeartbeat(const DeviceState& state) {
   dbg(loopDBG, state.sensors.temperatureC);
   dbg(loopDBG, " light=");
   dbg(loopDBG, state.sensors.lightLevel);
-  dbg(loopDBG, " motion=");
-  dbg(loopDBG, state.sensors.motionDetected);
+  dbg(loopDBG, " button=");
+  dbg(loopDBG, state.sensors.buttonPressed);
   dbg(loopDBG, " loops=");
   dln(loopDBG, state.loopIteration);
 }
@@ -102,6 +146,7 @@ void loopThing() {
   g_deviceState.loopIteration++;
 
   sampleSensors(g_deviceState.sensors, now);
+  handleLocalButtonControls(g_deviceState, now);
   updatePattern(g_deviceState, now);
   updateNetwork(g_deviceState, now);
 

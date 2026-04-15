@@ -65,7 +65,10 @@ void setBuffer(DeviceState& state, uint8_t red, uint8_t yellow, uint8_t green) {
 
 void applyAutoPattern(DeviceState& state) {
   if (Config::kTmp36OnlyFirstTestMode) {
-    if (state.sensors.temperatureC >= Config::kTemperatureAlertC) {
+    if (
+      state.sensors.temperatureC >= Config::kTemperatureAlertC ||
+      state.sensors.buttonPressed
+    ) {
       state.pattern = PatternId::Alert;
       return;
     }
@@ -82,7 +85,7 @@ void applyAutoPattern(DeviceState& state) {
   if (
     state.sensors.temperatureC >= Config::kTemperatureAlertC ||
     state.sensors.lightLevel <= Config::kLightAlertLevel ||
-    state.sensors.motionDetected
+    state.sensors.buttonPressed
   ) {
     state.pattern = PatternId::Alert;
     return;

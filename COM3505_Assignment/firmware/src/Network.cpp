@@ -64,8 +64,8 @@ String buildSensorPayload(const DeviceState& state) {
   payload += String(state.sensors.temperatureC, 1);
   payload += ",\"light_level\":";
   payload += String(state.sensors.lightLevel);
-  payload += ",\"motion_detected\":";
-  payload += state.sensors.motionDetected ? "true" : "false";
+  payload += ",\"button_pressed\":";
+  payload += state.sensors.buttonPressed ? "true" : "false";
   payload += "}";
 
   payload += "}";
@@ -372,6 +372,19 @@ void updateNetwork(DeviceState& state, unsigned long now) {
 
   bool requestAttempted = false;
   bool requestSucceeded = false;
+
+  if (state.localControlDirty) {
+    requestAttempted = true;
+    requestSucceeded = syncSensorState(state) || requestSucceeded;
+
+    if (requestSucceeded) {
+      state.localControlDirty = false;
+      g_lastSensorUploadMs = now;
+    } else {
+      state.serverReachable = false;
+      return;
+    }
+  }
 
   if (now - g_lastSensorUploadMs >= Config::kSensorUploadIntervalMs) {
     g_lastSensorUploadMs = now;

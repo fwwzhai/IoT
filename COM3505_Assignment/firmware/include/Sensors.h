@@ -3,7 +3,7 @@
 //
 // This module is responsible for:
 //  - configuring sensor GPIO and ADC settings
-//  - sampling temperature, light, and optional motion inputs
+//  - sampling temperature, light, and optional button input
 //  - writing the latest values into SensorState
 
 #ifndef SENSORS_H
@@ -15,7 +15,7 @@ void setupSensors();
 void sampleSensors(SensorState&, unsigned long);
 float readTemperatureC();
 int readLightLevel();
-bool readMotionDetected();
+bool readButtonPressed();
 void printSensorSnapshot(const SensorState&);
 
 #endif

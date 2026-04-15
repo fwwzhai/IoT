@@ -46,6 +46,7 @@ The structure follows the lab-style PlatformIO layout for firmware, with separat
    - your laptop IPv4 address as `SERVER_HOST`
 3. Wire the current bring-up hardware:
    - TMP36 middle leg -> `A0`
+   - push button -> `GPIO5`, other side -> `GND` (uses `INPUT_PULLUP`)
    - red LED -> `GPIO6`
    - yellow LED -> `GPIO9`
    - green LED -> `GPIO12`
@@ -55,5 +56,7 @@ The structure follows the lab-style PlatformIO layout for firmware, with separat
 ## Current Bring-Up Mode
 
 - The firmware is currently in `TMP36-only first-test mode`
-- Light and motion inputs are stubbed during bring-up
+- Light input is stubbed during bring-up
+- Button input remains live on `GPIO5`
+- In `manual` mode, pressing the button cycles to the next LED pattern locally
 - Dashboard graph, controls, and server sync are live

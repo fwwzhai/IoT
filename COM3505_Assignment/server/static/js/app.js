@@ -17,7 +17,7 @@ const stateElements = {
   temperature: document.getElementById("temperature"),
   temperatureNote: document.getElementById("temperature-note"),
   light: document.getElementById("light"),
-  motion: document.getElementById("motion"),
+  button: document.getElementById("button"),
   mode: document.getElementById("mode"),
   pattern: document.getElementById("pattern-name"),
   healthPill: document.getElementById("health-pill"),
@@ -47,12 +47,12 @@ function safeMetric(value, suffix = "") {
   return `${value}${suffix}`;
 }
 
-function formatMotion(value) {
+function formatButton(value) {
   if (value === true) {
-    return "Detected";
+    return "Pressed";
   }
   if (value === false) {
-    return "Clear";
+    return "Released";
   }
   return "--";
 }
@@ -156,7 +156,7 @@ function updateStateCards(state) {
       : "Sampled by ESP32 and relayed through Flask";
 
   stateElements.light.textContent = safeMetric(state.sensors.light_level);
-  stateElements.motion.textContent = formatMotion(state.sensors.motion_detected);
+  stateElements.button.textContent = formatButton(state.sensors.button_pressed);
   stateElements.mode.textContent = state.device.mode ?? "manual";
   stateElements.pattern.textContent = `Pattern: ${state.device.pattern ?? "blink"}`;
 

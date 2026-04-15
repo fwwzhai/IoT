@@ -33,10 +33,10 @@ int readAnalogClamped(uint8_t pin) {
 void setupSensors() {
   analogReadResolution(12);
   analogSetPinAttenuation(Pins::kTemperatureSensorPin, ADC_11db);
+  pinMode(Pins::kButtonSensorPin, INPUT_PULLUP);
 
   if (!Config::kTmp36OnlyFirstTestMode) {
     analogSetPinAttenuation(Pins::kLightSensorPin, ADC_11db);
-    pinMode(Pins::kMotionSensorPin, INPUT_PULLUP);
   }
 
   dln(startupDBG, "setupSensors...");
@@ -45,12 +45,14 @@ void setupSensors() {
 
   if (Config::kTmp36OnlyFirstTestMode) {
     dln(startupDBG, "TMP36-only first-test mode enabled.");
-    dln(startupDBG, "Light and motion inputs are disabled for bring-up.");
+    dln(startupDBG, "Light input is disabled for bring-up.");
+    dbg(startupDBG, "button pin = ");
+    dln(startupDBG, Pins::kButtonSensorPin);
   } else {
     dbg(startupDBG, "light pin = ");
     dln(startupDBG, Pins::kLightSensorPin);
-    dbg(startupDBG, "motion pin = ");
-    dln(startupDBG, Pins::kMotionSensorPin);
+    dbg(startupDBG, "button pin = ");
+    dln(startupDBG, Pins::kButtonSensorPin);
   }
 }
 
@@ -87,16 +89,12 @@ int readLightLevel() {
 }
 
 // ---------------------------------------------------------------------------
-// readMotionDetected()
-// Read the optional digital motion input.
+// readButtonPressed()
+// Read the digital push-button input using the internal pull-up.
 // ---------------------------------------------------------------------------
 
-bool readMotionDetected() {
-  if (Config::kTmp36OnlyFirstTestMode) {
-    return false;
-  }
-
-  return digitalRead(Pins::kMotionSensorPin) == LOW;
+bool readButtonPressed() {
+  return digitalRead(Pins::kButtonSensorPin) == LOW;
 }
 
 // ---------------------------------------------------------------------------
@@ -113,8 +111,8 @@ void printSensorSnapshot(const SensorState& sensorState) {
   dbg(sensorDBG, sensorState.temperatureC);
   dbg(sensorDBG, " light=");
   dbg(sensorDBG, sensorState.lightLevel);
-  dbg(sensorDBG, " motion=");
-  dln(sensorDBG, sensorState.motionDetected);
+  dbg(sensorDBG, " button=");
+  dln(sensorDBG, sensorState.buttonPressed);
 }
 
 // ---------------------------------------------------------------------------
@@ -123,6 +121,8 @@ void printSensorSnapshot(const SensorState& sensorState) {
 // ---------------------------------------------------------------------------
 
 void sampleSensors(SensorState& sensorState, unsigned long now) {
+  sensorState.buttonPressed = readButtonPressed();
+
   if (now - g_lastSampleMs < Config::kSensorSampleIntervalMs) {
     return;
   }
@@ -131,7 +131,6 @@ void sampleSensors(SensorState& sensorState, unsigned long now) {
 
   sensorState.temperatureC = readTemperatureC();
   sensorState.lightLevel = readLightLevel();
-  sensorState.motionDetected = readMotionDetected();
 
   printSensorSnapshot(sensorState);
 }

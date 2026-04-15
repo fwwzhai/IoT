@@ -29,7 +29,7 @@ constexpr uint8_t kLedGreenPin = 12;
 
 constexpr uint8_t kTemperatureSensorPin = A0;
 constexpr uint8_t kLightSensorPin = A1;
-constexpr uint8_t kMotionSensorPin = 3;
+constexpr uint8_t kButtonSensorPin = 5;
 
 }  // namespace Pins
 

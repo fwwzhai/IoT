@@ -50,7 +50,7 @@ enum class PatternId : uint8_t {
 struct SensorState {
   float temperatureC = 0.0f;
   int lightLevel = 0;
-  bool motionDetected = false;
+  bool buttonPressed = false;
 };
 
 // ---------------------------------------------------------------------------
@@ -77,6 +77,7 @@ struct DeviceState {
   LedBuffer leds;
   bool wifiConnected = false;
   bool serverReachable = false;
+  bool localControlDirty = false;
   unsigned long loopIteration = 0;
 };
 

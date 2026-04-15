@@ -29,6 +29,7 @@ constexpr unsigned long kSensorUploadIntervalMs = 2000;
 constexpr unsigned long kControlPollIntervalMs = 500;
 constexpr unsigned long kAnimationIntervalMs = 250;
 constexpr unsigned long kSocketTimeoutMs = 3000;
+constexpr unsigned long kButtonDebounceMs = 180;
 
 // ---------------------------------------------------------------------------
 // ADC conversion constants
