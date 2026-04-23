@@ -1,0 +1,24 @@
+flowchart LR
+    subgraph Device["ESP32 Device"]
+        TMP36["TMP36 sensor<br/>A0"]
+        BTN["Push button<br/>GPIO5"]
+        FW["Firmware<br/>Sensors + Patterns + Network"]
+        LEDS["3 LEDs<br/>GPIO6, GPIO9, GPIO12"]
+
+        TMP36 --> FW
+        BTN --> FW
+        FW --> LEDS
+    end
+
+    FW -- "POST /api/sensor<br/>temperature, button, pattern, mode" --> Flask["Flask server"]
+    Flask -- "GET /api/state<br/>mode and pattern" --> FW
+
+    subgraph Web["Browser Interface"]
+        Browser["Dashboard UI"]
+    end
+
+    Browser -- "AJAX polling<br/>GET /api/state + GET /api/history" --> Flask
+    Browser -- "User controls<br/>POST /api/pattern + POST /api/mode" --> Flask
+
+    Flask --> History["Latest readings<br/>and recent history"]
+    History --> Flask
