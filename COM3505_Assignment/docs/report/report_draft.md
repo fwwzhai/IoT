@@ -2,57 +2,25 @@
 
 ## Title
 
-Smart Ambient Monitoring Node: ESP32 Sensor and LED Control via Flask Web Interface
+Smart Ambient Monitoring Node: An ESP32-Based Sensor and LED Control System Using a Flask Web Interface
 
 ## 1. Introduction
 
-This project implements an IoT system using an ESP32 Feather board, a TMP36 temperature sensor, a push button input, and three LEDs controlled through a Python Flask web interface. The aim was to satisfy the assignment requirements for sensing, actuation, networking, and browser-based monitoring while keeping the design modular and reliable.
+This report presents an ESP32-based Internet of Things system developed for the COM3505 assignment. The project satisfies the brief by reading sensor data, controlling three LEDs with dynamic patterns, connecting to Wi-Fi, sending telemetry to a Python Flask server, and providing a live web interface for monitoring and control.
 
-The final system reads sensor data on the ESP32, connects to local Wi-Fi, sends telemetry to a Flask server, and displays live information in a browser dashboard. The dashboard also allows LED pattern selection and switching between manual and automatic modes. The push button acts as a local digital input and can cycle LED patterns directly on the device in manual mode.
+The implemented system uses an Adafruit Feather ESP32-S3, a TMP36 temperature sensor, a push button input, and three LEDs. Sensor readings and device state are transmitted to a Flask server over Wi-Fi, while the browser dashboard shows live telemetry and allows mode and pattern changes without page refresh. The push button also provides local pattern control in manual mode.
 
 ## 2. Hardware Setup
 
-The hardware used in the current build is:
-
-- Adafruit Feather ESP32-S3
-- TMP36 temperature sensor
-- push button
-- 3 LEDs
-  - red
-  - yellow
-  - green
-- 3 current-limiting resistors
-- Breadboard and jumper wires
-
-The TMP36 sensor output is connected to analog pin `A0` on the ESP32. The push button is connected between GPIO `5` and ground and uses the ESP32 internal pull-up resistor. The three LEDs are connected to GPIO pins `6`, `9`, and `12`, matching the firmware pin map in `Pins.h`. Each LED is connected in series with a resistor.
-
-![Breadboard wiring diagram](../diagrams/circuit_image.png)
-
-Figure 1: Breadboard wiring for the ESP32 ambient monitoring node, showing the TMP36 temperature sensor, push button input, and three LED outputs.
+The validated hardware configuration comprises an Adafruit Feather ESP32-S3, a TMP36 temperature sensor, a push button, three LEDs, three current-limiting resistors, and standard breadboard wiring. The TMP36 output is connected to analog pin `A0`. The push button is connected between GPIO `5` and ground and uses the ESP32 internal pull-up resistor. The LEDs are connected to GPIO `6`, GPIO `9`, and GPIO `12`, with each LED protected by a series resistor.
 
 ![Circuit schematic diagram](../diagrams/circuit.png)
 
-Figure 2: Circuit schematic showing the ESP32 connections to the TMP36 sensor, push button, and LED/resistor output paths.
+Figure 1: Hardware schematic showing the ESP32 connections to the TMP36 sensor, push button, and LED output paths.
 
 ## 3. System Architecture
 
-The system has three main parts:
-
-- ESP32 firmware
-- Flask backend
-- browser dashboard
-
-The ESP32 reads sensors, generates LED patterns, and sends data over Wi-Fi. The Flask server acts as the coordination layer between the hardware and the browser. The browser dashboard displays live values and sends control commands back to the server, which are then read by the ESP32.
-
-High-level data flow:
-
-1. The ESP32 samples the temperature sensor and digital button input.
-2. The ESP32 updates the LED pattern engine.
-3. The ESP32 sends the latest device state and sensor values to Flask using HTTP and JSON.
-4. Flask stores the latest readings and current mode/pattern state.
-5. The dashboard polls the server using JavaScript and updates the page without refresh.
-6. Pattern and mode changes made in the browser are sent back to Flask and then fetched by the ESP32.
-7. In manual mode, a local push-button press can cycle to the next LED pattern and the updated state is pushed back to Flask so the dashboard remains in sync.
+The system is composed of three layers: ESP32 firmware, a Flask backend, and a browser dashboard. The ESP32 performs sensor acquisition, button handling, LED pattern generation, and Wi-Fi communication. The Flask server stores the latest readings and current control state, while the browser dashboard polls the server for live updates and sends user control commands back through the same API. In manual mode, a local button press can also cycle the active LED pattern, after which the updated state is pushed back to Flask.
 
 ```mermaid
 flowchart LR
@@ -81,116 +49,46 @@ flowchart LR
     History --> Flask
 ```
 
-Figure 3: System architecture showing the ESP32 device, connected sensors and LEDs, Flask coordination layer, and browser-based monitoring and control.
+Figure 2: System architecture showing the ESP32 device, Flask coordination layer, and browser-based monitoring and control.
 
 ## 4. Firmware Design
 
-The firmware is structured as a modular PlatformIO project rather than a single Arduino sketch. This improves readability and separates responsibilities clearly.
+The firmware was implemented as a modular PlatformIO project rather than as a single Arduino sketch. `Thing.cpp` provides the top-level control loop and shared runtime state, `Sensors.cpp` handles temperature sampling and button reading, `Patterns.cpp` implements the LED animation engine, and `Network.cpp` manages Wi-Fi and HTTP communication.
 
-The main firmware modules are:
+### 4.1 Sensor Acquisition
 
-- `main.cpp`: Arduino entry point
-- `Thing.cpp`: top-level orchestration and shared state
-- `Sensors.cpp`: sensor sampling
-- `Patterns.cpp`: LED pattern engine
-- `Network.cpp`: Wi-Fi and HTTP communication
+The system uses two active inputs: a TMP36 temperature sensor and a push button. Temperature is sampled through the ESP32 ADC and converted into degrees Celsius. The button is configured with `INPUT_PULLUP`, so a pressed state is represented by a logic low input.
 
-This design avoids putting unrelated logic into a single `loop()` function. Instead, the system maintains a shared `DeviceState` structure and updates sensing, animation, and networking separately.
+### 4.2 LED Pattern Engine
 
-### Sensor Reading
+The three LEDs are controlled through a logical LED buffer representing red, yellow, and green channels. The implemented patterns are blink, chase, cycle, alert, pulse, and heartbeat. In manual mode, the user can select a pattern from the dashboard or cycle through the pattern list locally using the push button. In automatic mode, the firmware can switch patterns in response to sensor thresholds and button state.
 
-The current build uses a TMP36 temperature sensor and a push button input. Temperature is read through the ESP32 ADC and converted into degrees Celsius. The button is read using `INPUT_PULLUP`, so a pressed state is detected when the pin reads `LOW`. Sensor sampling is scheduled with `millis()` so the firmware remains responsive.
+### 4.3 Timing Strategy
 
-### LED Pattern Engine
+The firmware uses `millis()`-based scheduling rather than blocking delays, allowing sensing, pattern animation, and network communication to proceed concurrently.
 
-The system controls three LEDs using a logical LED buffer with red, yellow, and green channels. Implemented patterns include blink, chase, cycle, alert, pulse, and heartbeat. The active pattern is updated using non-blocking timing. In manual mode, the user can choose a pattern from the browser or cycle through patterns locally using the push button.
+## 5. Network and Web Integration
 
-### Timing Strategy
+The ESP32 connects to the local wireless network in station mode and prints IP details to the serial monitor for debugging. The firmware communicates with the Flask server using HTTP and JSON. The key endpoints are `POST /api/sensor`, `GET /api/state`, `POST /api/pattern`, `POST /api/mode`, and `GET /api/history`. This design keeps the embedded implementation simple while still supporting responsive browser-based control.
 
-The firmware uses `millis()`-based scheduling instead of blocking delays so the device can handle sensor reading, LED animation, and server communication concurrently. Separate timers improve responsiveness and stability.
+## 6. Flask Server and Browser Dashboard
 
-## 5. Wi-Fi and Server Communication
+The Flask server stores the latest sensor readings, current operating mode, current LED pattern, and a short history buffer for visualisation. It also serves the dashboard interface used for live temperature and button display, mode and pattern control, device health reporting, and recent history graphing. JavaScript polling is used to fetch updated state and history without requiring a full page refresh, matching the assignment requirement for live browser updates.
 
-The ESP32 connects to the local Wi-Fi network in station mode. Once connected, the firmware prints the IP address to the serial monitor for debugging and troubleshooting. It then communicates with the Flask server using HTTP requests with JSON payloads.
+## 7. Testing and Results
 
-The main API interactions are:
+Testing was performed by running the Flask server locally, connecting the ESP32 to Wi-Fi, and monitoring both the serial output and the browser dashboard. Successful operation was verified through Wi-Fi connection and IP output, regular telemetry uploads, live dashboard updates without refresh, correct browser-based mode and pattern control, visible LED pattern changes, correct button state transitions, and successful local pattern cycling in manual mode. Final testing showed that the ESP32 could connect reliably to the server, upload temperature and button data, update the dashboard in real time, and maintain continuous LED animation.
 
-- `POST /api/sensor`
-  - uploads current sensor values, button state, and device state
-- `GET /api/state`
-  - fetches the latest mode and pattern
+## 8. Evaluation
 
-This keeps the ESP32 side simple while still supporting live interaction with the browser interface.
+The implemented system satisfies the main functional requirements of the assignment. It reads sensor data, controls three LEDs using dynamic patterns, connects to Wi-Fi, exchanges data with a Python Flask server, and supports browser-based live monitoring and control.
 
-## 6. Flask Server and Web Interface
+The strongest aspect of the project is the separation of concerns across sensing, pattern generation, networking, and presentation. This structure improved debugging, supported incremental development, and made the system easier to explain. The project also includes features beyond the minimum requirements, including automatic mode, a history graph, device health feedback, and local push-button pattern cycling.
 
-The Flask server stores the latest sensor values, the active LED pattern, the current mode, and recent history for dashboard display. It also serves the dashboard and exposes API routes for both the ESP32 and the browser.
+One deliberate simplification in the Flask implementation is the use of a module-level global `STATE` object to hold the latest sensor values, device mode, and pattern information. This is acceptable for a small single-user coursework prototype because it keeps the coordination logic simple. However, it has clear limitations: state is lost if the server restarts, concurrency is not handled robustly, and the design would not scale well to multiple devices or multiple worker processes. A stronger alternative would be a persistent store such as SQLite or Redis with explicit device identifiers and structured history records. That would improve reliability and handle edge cases such as simultaneous updates, stale sessions, and multi-device expansion.
 
-The dashboard provides:
+The main limitation of the present configuration is that the reserved light input has not yet been validated in the final hardware build. Nevertheless, the system exceeds the minimum sensing requirement because it demonstrates both a working analog temperature input and a working digital button input.
 
-- live temperature display
-- live button state display
-- device health status
-- current mode and pattern display
-- pattern selection buttons
-- mode switching between manual and auto
-- live history chart
+## 9. Conclusion
 
-The browser uses JavaScript polling to request updated state and history from the Flask server. The page therefore updates automatically without manual refresh. This satisfies the assignment requirement for live web updates and matches the acceptable AJAX approach described in the brief.
-
-## 7. Automatic Behaviour and Extra Features
-
-In addition to the core assignment requirements, the system includes:
-
-- manual and automatic operating modes
-- multiple LED animation patterns
-- live local button input shown on the dashboard
-- local pattern cycling from the hardware button in manual mode
-- recent sensor history chart
-- responsive dashboard layout
-- health indicator showing whether the device is live, stale, or offline
-
-In automatic mode, the firmware can change the LED pattern based on sensor thresholds and button state. This allows the device to react to conditions and local interaction instead of only following manual browser commands.
-
-## 8. Testing and Results
-
-The system was tested by running the Flask server locally, connecting the ESP32 to Wi-Fi, and opening the dashboard in a browser. Successful operation was verified by checking:
-
-- serial monitor output showing Wi-Fi connection and IP address
-- periodic sensor updates from the ESP32
-- live button state changing between released and pressed
-- live dashboard updates without page refresh
-- visible LED pattern changes
-- successful browser control of pattern and mode
-- successful local pattern cycling using the push button in manual mode
-
-The final tests showed that the device could connect to Wi-Fi, upload temperature and button data to Flask, update the dashboard without refresh, and continue animating the LEDs correctly. The button input was verified both in the serial monitor and in the browser dashboard.
-
-## 9. Evaluation
-
-The project meets the main functional requirements of the assignment:
-
-- sensor integration
-- multiple sensor inputs through temperature and button sensing
-- three-LED dynamic control
-- Wi-Fi connection
-- communication with a Python Flask server
-- browser-based live monitoring
-- browser-based LED control
-
-A major strength of the project is the separation between sensing, animation, networking, and presentation. This makes the code easier to debug and explain. Another strength is the end-to-end integration between hardware, backend, and dashboard.
-
-One limitation of the current bring-up configuration is that the firmware is still using a TMP36-focused test mode, with the light input stubbed until final hardware validation. However, this does not prevent the system from meeting the core assignment requirements because the brief requires at least one working sensor, and the project currently demonstrates both a working temperature sensor and a working button input.
-
-## 10. Conclusion
-
-This project demonstrates a complete ESP32-based IoT system that combines sensing, LED control, Wi-Fi communication, a Flask backend, and a live browser dashboard. The system satisfies the core assignment brief and adds auto mode, a live graph, responsive interface design, and local push-button pattern control. The result is a coherent and well-structured IoT application suitable for demonstration and technical discussion.
-
-## Final Checklist
-
-- Insert hardware diagram
-- Add one screenshot of the dashboard
-- Trim wording to fit within the 4-page limit
-- Check all figure captions
-- Check that `Secrets.h` is not submitted
-- Record the short demo video
+This project demonstrates a complete ESP32-based IoT system that integrates sensing, LED actuation, Wi-Fi communication, a Flask backend, and a live browser dashboard. The implementation satisfies the assignment brief and extends it with local hardware interaction, multiple animation patterns, automatic behaviour, and a more polished monitoring interface. Overall, the result is a coherent and well-structured IoT application suitable for demonstration and technical discussion.

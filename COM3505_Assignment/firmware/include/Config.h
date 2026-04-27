@@ -16,7 +16,7 @@ namespace Config {
 // Enable this while testing with TMP36 + 3 LEDs only.
 // ---------------------------------------------------------------------------
 
-constexpr bool kTmp36OnlyFirstTestMode = true;
+constexpr bool kTmp36OnlyFirstTestMode = false;
 
 // ---------------------------------------------------------------------------
 // Timing configuration
