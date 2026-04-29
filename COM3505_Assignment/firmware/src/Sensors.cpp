@@ -35,25 +35,11 @@ void setupSensors() {
   analogSetPinAttenuation(Pins::kTemperatureSensorPin, ADC_11db);
   pinMode(Pins::kButtonSensorPin, INPUT_PULLUP);
 
-  if (!Config::kTmp36OnlyFirstTestMode) {
-    analogSetPinAttenuation(Pins::kLightSensorPin, ADC_11db);
-  }
-
   dln(startupDBG, "setupSensors...");
   dbg(startupDBG, "temperature pin = ");
   dln(startupDBG, Pins::kTemperatureSensorPin);
-
-  if (Config::kTmp36OnlyFirstTestMode) {
-    dln(startupDBG, "TMP36-only first-test mode enabled.");
-    dln(startupDBG, "Light input is disabled for bring-up.");
-    dbg(startupDBG, "button pin = ");
-    dln(startupDBG, Pins::kButtonSensorPin);
-  } else {
-    dbg(startupDBG, "light pin = ");
-    dln(startupDBG, Pins::kLightSensorPin);
-    dbg(startupDBG, "button pin = ");
-    dln(startupDBG, Pins::kButtonSensorPin);
-  }
+  dbg(startupDBG, "button pin = ");
+  dln(startupDBG, Pins::kButtonSensorPin);
 }
 
 // ---------------------------------------------------------------------------
@@ -75,20 +61,6 @@ float readTemperatureC() {
   return (voltage - 0.5f) * 100.0f;
 }
 
-// ---------------------------------------------------------------------------
-// readLightLevel()
-// Return the raw ADC reading from the light sensor channel.
-// ---------------------------------------------------------------------------
-
-int readLightLevel() {
-  if (Config::kTmp36OnlyFirstTestMode) {
-    return 4095;
-  }
-
-  return readAnalogClamped(Pins::kLightSensorPin);
-}
-
-// ---------------------------------------------------------------------------
 // readButtonPressed()
 // Read the digital push-button input using the internal pull-up.
 // ---------------------------------------------------------------------------
@@ -109,8 +81,6 @@ void printSensorSnapshot(const SensorState& sensorState) {
   dbg(sensorDBG, g_lastTemperatureVoltage);
   dbg(sensorDBG, " temp=");
   dbg(sensorDBG, sensorState.temperatureC);
-  dbg(sensorDBG, " light=");
-  dbg(sensorDBG, sensorState.lightLevel);
   dbg(sensorDBG, " button=");
   dln(sensorDBG, sensorState.buttonPressed);
 }
@@ -130,7 +100,6 @@ void sampleSensors(SensorState& sensorState, unsigned long now) {
   g_lastSampleMs = now;
 
   sensorState.temperatureC = readTemperatureC();
-  sensorState.lightLevel = readLightLevel();
 
   printSensorSnapshot(sensorState);
 }

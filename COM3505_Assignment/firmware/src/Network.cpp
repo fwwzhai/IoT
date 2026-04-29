@@ -51,24 +51,32 @@ String buildSensorPayload(const DeviceState& state) {
   String payload = "{";
 
   payload += "\"device\":{";
-  payload += "\"mode\":\"";
-  payload += modeName(state.mode);
-  payload += "\",\"pattern\":\"";
-  payload += patternName(state.pattern);
-  payload += "\",\"wifi_connected\":";
+  payload += "\"wifi_connected\":";
   payload += state.wifiConnected ? "true" : "false";
   payload += "},";
 
   payload += "\"sensors\":{";
   payload += "\"temperature_c\":";
   payload += String(state.sensors.temperatureC, 1);
-  payload += ",\"light_level\":";
-  payload += String(state.sensors.lightLevel);
   payload += ",\"button_pressed\":";
   payload += state.sensors.buttonPressed ? "true" : "false";
   payload += "}";
 
   payload += "}";
+  return payload;
+}
+
+String buildModePayload(DeviceMode mode) {
+  String payload = "{\"mode\":\"";
+  payload += modeName(mode);
+  payload += "\"}";
+  return payload;
+}
+
+String buildPatternPayload(PatternId pattern) {
+  String payload = "{\"pattern\":\"";
+  payload += patternName(pattern);
+  payload += "\"}";
   return payload;
 }
 
@@ -255,6 +263,30 @@ bool syncSensorState(const DeviceState& state) {
   return statusCode == 200;
 }
 
+bool syncLocalControlState(const DeviceState& state) {
+  String responseBody;
+
+  const int modeStatus = sendRequest(
+    "POST",
+    "/api/mode",
+    buildModePayload(state.mode),
+    responseBody
+  );
+  dbg(netDBG, "mode POST status = ");
+  dln(netDBG, modeStatus);
+
+  const int patternStatus = sendRequest(
+    "POST",
+    "/api/pattern",
+    buildPatternPayload(state.pattern),
+    responseBody
+  );
+  dbg(netDBG, "pattern POST status = ");
+  dln(netDBG, patternStatus);
+
+  return modeStatus == 200 && patternStatus == 200;
+}
+
 // ---------------------------------------------------------------------------
 // fetchControlState()
 // Pull the latest mode and pattern selection from Flask.
@@ -375,27 +407,26 @@ void updateNetwork(DeviceState& state, unsigned long now) {
 
   if (state.localControlDirty) {
     requestAttempted = true;
-    requestSucceeded = syncSensorState(state) || requestSucceeded;
+    requestSucceeded = syncLocalControlState(state) || requestSucceeded;
 
     if (requestSucceeded) {
       state.localControlDirty = false;
-      g_lastSensorUploadMs = now;
     } else {
       state.serverReachable = false;
       return;
     }
   }
 
-  if (now - g_lastSensorUploadMs >= Config::kSensorUploadIntervalMs) {
-    g_lastSensorUploadMs = now;
-    requestAttempted = true;
-    requestSucceeded = syncSensorState(state) || requestSucceeded;
-  }
-
   if (now - g_lastControlPollMs >= Config::kControlPollIntervalMs) {
     g_lastControlPollMs = now;
     requestAttempted = true;
     requestSucceeded = fetchControlState(state) || requestSucceeded;
+  }
+
+  if (now - g_lastSensorUploadMs >= Config::kSensorUploadIntervalMs) {
+    g_lastSensorUploadMs = now;
+    requestAttempted = true;
+    requestSucceeded = syncSensorState(state) || requestSucceeded;
   }
 
   if (requestAttempted) {

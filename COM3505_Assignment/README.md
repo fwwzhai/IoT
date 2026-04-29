@@ -53,10 +53,9 @@ The structure follows the lab-style PlatformIO layout for firmware, with separat
 4. Build from `COM3505_Assignment/firmware`:
    `pio run`
 
-## Current Bring-Up Mode
+## Current Hardware Scope
 
-- The firmware is currently in `TMP36-only first-test mode`
-- Light input is stubbed during bring-up
+- The validated sensor path is `TMP36` temperature on `A0`
 - Button input remains live on `GPIO5`
 - In `manual` mode, pressing the button cycles to the next LED pattern locally
 - Dashboard graph, controls, and server sync are live

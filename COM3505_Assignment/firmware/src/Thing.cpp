@@ -76,8 +76,6 @@ void printHeartbeat(const DeviceState& state) {
   dbg(loopDBG, state.serverReachable);
   dbg(loopDBG, " temp=");
   dbg(loopDBG, state.sensors.temperatureC);
-  dbg(loopDBG, " light=");
-  dbg(loopDBG, state.sensors.lightLevel);
   dbg(loopDBG, " button=");
   dbg(loopDBG, state.sensors.buttonPressed);
   dbg(loopDBG, " loops=");

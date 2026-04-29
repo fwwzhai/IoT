@@ -9,7 +9,6 @@
   --accent: #d45113;
   --accent-deep: #9f3c0c;
   --temperature: #df5d2e;
-  --light: #0e8b7f;
   --ok: #1f8f5f;
   --warn: #c98613;
   --off: #8b5b4d;
@@ -219,10 +218,6 @@ select {
   background: var(--temperature);
 }
 
-.legend-swatch.light {
-  background: var(--light);
-}
-
 .chart-card {
   padding-bottom: 18px;
 }
@@ -292,10 +287,6 @@ select {
 
 .chart-tooltip-dot.temperature {
   background: var(--temperature);
-}
-
-.chart-tooltip-dot.light {
-  background: var(--light);
 }
 
 .toggle-row,

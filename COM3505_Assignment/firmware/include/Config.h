@@ -12,13 +12,6 @@
 namespace Config {
 
 // ---------------------------------------------------------------------------
-// Bring-up mode
-// Enable this while testing with TMP36 + 3 LEDs only.
-// ---------------------------------------------------------------------------
-
-constexpr bool kTmp36OnlyFirstTestMode = false;
-
-// ---------------------------------------------------------------------------
 // Timing configuration
 // ---------------------------------------------------------------------------
 
@@ -40,13 +33,10 @@ constexpr float kAdcMax = 4095.0f;
 
 // ---------------------------------------------------------------------------
 // Auto-mode thresholds
-// These are starting values only and should be tuned after hardware tests.
 // ---------------------------------------------------------------------------
 
-constexpr float kTemperatureWarningC = 21.0f;
-constexpr float kTemperatureAlertC = 17.0f;
-constexpr int kLightWarningLevel = 1800;
-constexpr int kLightAlertLevel = 900;
+constexpr float kTemperatureWarningC = 18.0f;
+constexpr float kTemperatureAlertC = 25.0f;
 
 }  // namespace Config
 

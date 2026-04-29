@@ -18,7 +18,6 @@ STATE = {
     },
     "sensors": {
         "temperature_c": None,
-        "light_level": None,
         "button_pressed": None,
     },
 }
@@ -77,13 +76,8 @@ def post_sensor():
     device = payload.get("device", {})
 
     STATE["sensors"]["temperature_c"] = sensors.get("temperature_c")
-    STATE["sensors"]["light_level"] = sensors.get("light_level")
     STATE["sensors"]["button_pressed"] = sensors.get("button_pressed")
 
-    if "mode" in device:
-        STATE["device"]["mode"] = device["mode"]
-    if "pattern" in device:
-        STATE["device"]["pattern"] = device["pattern"]
     if "wifi_connected" in device:
         STATE["device"]["wifi_connected"] = device["wifi_connected"]
     if "last_seen" in device:
@@ -95,7 +89,6 @@ def post_sensor():
         {
             "timestamp": STATE["device"]["last_seen"],
             "temperature_c": STATE["sensors"]["temperature_c"],
-            "light_level": STATE["sensors"]["light_level"],
             "button_pressed": STATE["sensors"]["button_pressed"],
         }
     )

@@ -9,14 +9,12 @@ const CHART_COLOURS = {
   axis: "rgba(21, 35, 33, 0.18)",
   label: "rgba(21, 35, 33, 0.62)",
   temperature: "#df5d2e",
-  light: "#0e8b7f",
   hover: "rgba(21, 35, 33, 0.2)",
 };
 
 const stateElements = {
   temperature: document.getElementById("temperature"),
   temperatureNote: document.getElementById("temperature-note"),
-  light: document.getElementById("light"),
   button: document.getElementById("button"),
   mode: document.getElementById("mode"),
   pattern: document.getElementById("pattern-name"),
@@ -155,7 +153,6 @@ function updateStateCards(state) {
       ? "Awaiting sensor data"
       : "Sampled by ESP32 and relayed through Flask";
 
-  stateElements.light.textContent = safeMetric(state.sensors.light_level);
   stateElements.button.textContent = formatButton(state.sensors.button_pressed);
   stateElements.mode.textContent = state.device.mode ?? "manual";
   stateElements.pattern.textContent = `Pattern: ${state.device.pattern ?? "blink"}`;
@@ -264,7 +261,7 @@ function drawAxes(plot) {
   chartContext.stroke();
 }
 
-function drawAxisLabels(plot, history, temperatureMeta, lightMeta) {
+function drawAxisLabels(plot, history, temperatureMeta) {
   chartContext.fillStyle = CHART_COLOURS.label;
   chartContext.font = "12px Segoe UI";
   chartContext.textBaseline = "middle";
@@ -273,21 +270,14 @@ function drawAxisLabels(plot, history, temperatureMeta, lightMeta) {
     const ratio = i / 4;
     const y = plot.top + plot.height * ratio;
     const temperatureValue = temperatureMeta.max - temperatureMeta.spread * ratio;
-    const lightValue = lightMeta.max - lightMeta.spread * ratio;
 
     chartContext.textAlign = "left";
     chartContext.fillText(formatSeriesValue(temperatureValue, "temperature_c"), 8, y);
-
-    chartContext.textAlign = "right";
-    chartContext.fillText(formatSeriesValue(lightValue, "light_level"), chartCanvas.width - 8, y);
   }
 
   chartContext.textBaseline = "alphabetic";
   chartContext.textAlign = "left";
-  chartContext.fillText("Temp", plot.left, 14);
-
-  chartContext.textAlign = "right";
-  chartContext.fillText("Light", plot.right, 14);
+  chartContext.fillText("Temperature", plot.left, 14);
 
   if (history.length === 0) {
     return;
@@ -309,16 +299,14 @@ function drawAxisLabels(plot, history, temperatureMeta, lightMeta) {
   }
 }
 
-function buildChartPoints(history, plot, temperatureMeta, lightMeta) {
+function buildChartPoints(history, plot, temperatureMeta) {
   const stepX = history.length > 1 ? plot.width / (history.length - 1) : 0;
 
   return history.map((point, index) => ({
     x: plot.left + index * stepX,
     timestamp: point.timestamp,
     temperature_c: point.temperature_c,
-    light_level: point.light_level,
     temperatureY: valueToY(point.temperature_c, temperatureMeta, plot),
-    lightY: valueToY(point.light_level, lightMeta, plot),
   }));
 }
 
@@ -372,7 +360,6 @@ function drawHoverState(layout, hoverIndex) {
 
   const markers = [
     { y: point.temperatureY, colour: CHART_COLOURS.temperature },
-    { y: point.lightY, colour: CHART_COLOURS.light },
   ];
 
   for (const marker of markers) {
@@ -417,18 +404,11 @@ function showTooltip(layout, hoverIndex) {
       </span>
       <strong>${formatSeriesValue(point.temperature_c, "temperature_c")}</strong>
     </div>
-    <div class="chart-tooltip-row">
-      <span class="chart-tooltip-key">
-        <i class="chart-tooltip-dot light"></i>
-        Light
-      </span>
-      <strong>${formatSeriesValue(point.light_level, "light_level")}</strong>
-    </div>
   `;
 
   chartTooltip.hidden = false;
 
-  const pointY = point.temperatureY ?? point.lightY ?? layout.plot.top;
+  const pointY = point.temperatureY ?? layout.plot.top;
   const scaleX = chartFrame.clientWidth / chartCanvas.width;
   const scaleY = chartFrame.clientHeight / chartCanvas.height;
   const anchorX = point.x * scaleX;
@@ -503,17 +483,15 @@ function drawChart(history) {
   }
 
   const temperatureMeta = buildSeriesMeta(history, "temperature_c");
-  const lightMeta = buildSeriesMeta(history, "light_level");
-  const points = buildChartPoints(history, plot, temperatureMeta, lightMeta);
+  const points = buildChartPoints(history, plot, temperatureMeta);
 
   latestChartLayout = {
     plot,
     points,
   };
 
-  drawAxisLabels(plot, history, temperatureMeta, lightMeta);
+  drawAxisLabels(plot, history, temperatureMeta);
   drawSeries(points, "temperatureY", CHART_COLOURS.temperature);
-  drawSeries(points, "lightY", CHART_COLOURS.light);
   drawHoverState(latestChartLayout, hoveredChartIndex);
 }
 

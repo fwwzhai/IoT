@@ -49,7 +49,6 @@ enum class PatternId : uint8_t {
 
 struct SensorState {
   float temperatureC = 0.0f;
-  int lightLevel = 0;
   bool buttonPressed = false;
 };
 
