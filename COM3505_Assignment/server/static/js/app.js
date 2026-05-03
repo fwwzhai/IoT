@@ -18,6 +18,7 @@ const stateElements = {
   button: document.getElementById("button"),
   mode: document.getElementById("mode"),
   pattern: document.getElementById("pattern-name"),
+  patternPill: document.getElementById("pattern-pill"),
   healthPill: document.getElementById("health-pill"),
   lastSeen: document.getElementById("last-seen"),
   lastSeenDetail: document.getElementById("last-seen-detail"),
@@ -130,6 +131,23 @@ function formatSeriesValue(value, key) {
   return `${Math.round(Number(value))}`;
 }
 
+function formatPatternName(pattern) {
+  if (!pattern) {
+    return "Blink";
+  }
+
+  return pattern
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function setText(element, value) {
+  if (element) {
+    element.textContent = value;
+  }
+}
+
 function updateButtonStates() {
   const mode = latestState?.device?.mode ?? "manual";
   const pattern = latestState?.device?.pattern ?? "blink";
@@ -147,26 +165,34 @@ function updateButtonStates() {
 function updateStateCards(state) {
   latestState = state;
 
-  stateElements.temperature.textContent = safeMetric(state.sensors.temperature_c, " C");
-  stateElements.temperatureNote.textContent =
+  setText(stateElements.temperature, safeMetric(state.sensors.temperature_c, " C"));
+  setText(
+    stateElements.temperatureNote,
     state.sensors.temperature_c === null
       ? "Awaiting sensor data"
-      : "Sampled by ESP32 and relayed through Flask";
+      : "Sampled by ESP32 and relayed through Flask"
+  );
 
-  stateElements.button.textContent = formatButton(state.sensors.button_pressed);
-  stateElements.mode.textContent = state.device.mode ?? "manual";
-  stateElements.pattern.textContent = `Pattern: ${state.device.pattern ?? "blink"}`;
+  setText(stateElements.button, formatButton(state.sensors.button_pressed));
+  setText(stateElements.mode, state.device.mode ?? "manual");
+  const patternLabel = formatPatternName(state.device.pattern);
+  setText(stateElements.pattern, `Pattern: ${patternLabel}`);
+  setText(stateElements.patternPill, `Pattern: ${patternLabel}`);
+  if (stateElements.patternPill) {
+    stateElements.patternPill.dataset.activePattern = state.device.pattern ?? "blink";
+  }
 
   const health = state.device.health ?? "offline";
-  stateElements.healthPill.dataset.health = health;
-  stateElements.healthPill.textContent = HEALTH_LABELS[health] ?? "Offline";
+  if (stateElements.healthPill) {
+    stateElements.healthPill.dataset.health = health;
+    stateElements.healthPill.textContent = HEALTH_LABELS[health] ?? "Offline";
+  }
 
   const relativeTime = formatRelativeTime(state.device.last_seen);
-  stateElements.lastSeen.textContent = relativeTime;
-  stateElements.lastSeenDetail.textContent = relativeTime;
-  stateElements.wifiState.textContent = state.device.wifi_connected ? "connected" : "offline";
-  stateElements.backendState.textContent =
-    health === "offline" ? "awaiting device" : "receiving data";
+  setText(stateElements.lastSeen, relativeTime);
+  setText(stateElements.lastSeenDetail, relativeTime);
+  setText(stateElements.wifiState, state.device.wifi_connected ? "connected" : "offline");
+  setText(stateElements.backendState, health === "offline" ? "awaiting device" : "receiving data");
 
   updateButtonStates();
 }

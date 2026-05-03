@@ -3,12 +3,16 @@ from datetime import datetime, timezone
 import os
 
 from flask import Flask, jsonify, render_template, request
-from waitress import serve
 
 app = Flask(__name__)
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+
+ASSET_VERSION = "20260503-pattern-pill"
 MAX_HISTORY_POINTS = 120
 VALID_PATTERNS = {"blink", "chase", "cycle", "alert", "pulse", "heartbeat"}
 VALID_MODES = {"manual", "auto"}
+TEMPERATURE_WARNING_C = 18.0
+TEMPERATURE_ALERT_C = 24.0
 
 STATE = {
     "device": {
@@ -28,6 +32,45 @@ HISTORY = deque(maxlen=MAX_HISTORY_POINTS)
 
 def utc_now_iso():
     return datetime.now(timezone.utc).isoformat()
+
+
+@app.after_request
+def add_no_cache_headers(response):
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
+def sensor_temperature():
+    value = STATE["sensors"].get("temperature_c")
+    if value is None:
+        return None
+
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def apply_auto_pattern():
+    if STATE["device"]["mode"] != "auto":
+        return
+
+    temperature_c = sensor_temperature()
+    button_pressed = STATE["sensors"].get("button_pressed") is True
+
+    if button_pressed or (
+        temperature_c is not None and temperature_c >= TEMPERATURE_ALERT_C
+    ):
+        STATE["device"]["pattern"] = "alert"
+        return
+
+    if temperature_c is not None and temperature_c >= TEMPERATURE_WARNING_C:
+        STATE["device"]["pattern"] = "pulse"
+        return
+
+    STATE["device"]["pattern"] = "blink"
 
 
 def update_health_state():
@@ -57,11 +100,12 @@ def snapshot_history():
 
 @app.get("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", asset_version=ASSET_VERSION)
 
 
 @app.get("/api/state")
 def get_state():
+    apply_auto_pattern()
     update_health_state()
     return jsonify(STATE)
 
@@ -87,6 +131,8 @@ def post_sensor():
     else:
         STATE["device"]["last_seen"] = utc_now_iso()
 
+    apply_auto_pattern()
+
     HISTORY.append(
         {
             "timestamp": STATE["device"]["last_seen"],
@@ -108,8 +154,9 @@ def health():
 def post_pattern():
     payload = request.get_json(silent=True) or {}
     pattern = payload.get("pattern")
-    if pattern in VALID_PATTERNS:
+    if pattern in VALID_PATTERNS and STATE["device"]["mode"] != "auto":
         STATE["device"]["pattern"] = pattern
+    apply_auto_pattern()
     return jsonify({"ok": True, "pattern": STATE["device"]["pattern"]})
 
 
@@ -119,8 +166,11 @@ def post_mode():
     mode = payload.get("mode")
     if mode in VALID_MODES:
         STATE["device"]["mode"] = mode
+    apply_auto_pattern()
     return jsonify({"ok": True, "mode": STATE["device"]["mode"]})
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    host = os.getenv("APP_HOST", "0.0.0.0")
+    port = int(os.getenv("APP_PORT", "5000"))
+    app.run(host=host, port=port, debug=True)

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>COM3505 Assignment Dashboard</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css', v=asset_version) }}">
 </head>
 <body>
   <main class="shell">
@@ -19,6 +19,7 @@
       </div>
       <div class="status-cluster">
         <span class="status-pill" id="health-pill">Offline</span>
+        <span class="pattern-pill" id="pattern-pill">Pattern: Blink</span>
         <p class="status-note" id="last-seen">Waiting for device</p>
       </div>
     </header>
@@ -117,6 +118,6 @@
     </section>
   </main>
 
-  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/app.js', v=asset_version) }}"></script>
 </body>
 </html>

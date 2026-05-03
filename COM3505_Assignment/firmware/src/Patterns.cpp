@@ -69,7 +69,7 @@ void applyAutoPattern(DeviceState& state) {
     state.sensors.temperatureC >= Config::kTemperatureAlertC ||
     state.sensors.buttonPressed
   ) {
-    state.pattern = PatternId::Chase;
+    state.pattern = PatternId::Alert;
     return;
   }
 

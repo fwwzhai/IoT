@@ -35,7 +35,7 @@ constexpr float kAdcMax = 4095.0f;
 // Auto-mode thresholds
 // ---------------------------------------------------------------------------
 
-constexpr float kTemperatureWarningC = 18.0f;
+constexpr float kTemperatureWarningC = 20.0f;
 constexpr float kTemperatureAlertC = 24.0f;
 
 }  // namespace Config
