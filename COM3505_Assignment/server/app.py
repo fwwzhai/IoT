@@ -123,6 +123,4 @@ def post_mode():
 
 
 if __name__ == "__main__":
-    host = os.getenv("APP_HOST", "0.0.0.0")
-    port = int(os.getenv("APP_PORT", "5000"))
-    serve(app, host=host, port=port)
+    app.run(host="0.0.0.0", debug=True)
