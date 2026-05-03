@@ -11,7 +11,7 @@ ASSET_VERSION = "20260503-pattern-pill"
 MAX_HISTORY_POINTS = 120
 VALID_PATTERNS = {"blink", "chase", "cycle", "alert", "pulse", "heartbeat"}
 VALID_MODES = {"manual", "auto"}
-TEMPERATURE_WARNING_C = 18.0
+TEMPERATURE_WARNING_C = 19.0
 TEMPERATURE_ALERT_C = 24.0
 
 STATE = {
