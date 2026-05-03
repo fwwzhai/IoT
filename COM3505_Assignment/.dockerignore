@@ -1,0 +1,12 @@
+.git
+.gitignore
+.pylibs/
+docs/
+firmware/
+server/__pycache__/
+server/.venv/
+server/.pytest_cache/
+server/.mypy_cache/
+server/.env
+Thumbs.db
+.DS_Store

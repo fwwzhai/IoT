@@ -36,7 +36,7 @@ constexpr float kAdcMax = 4095.0f;
 // ---------------------------------------------------------------------------
 
 constexpr float kTemperatureWarningC = 18.0f;
-constexpr float kTemperatureAlertC = 25.0f;
+constexpr float kTemperatureAlertC = 24.0f;
 
 }  // namespace Config
 

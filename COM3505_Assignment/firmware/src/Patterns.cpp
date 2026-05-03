@@ -23,7 +23,7 @@ DeviceMode g_lastMode = DeviceMode::Manual;
 unsigned long animationIntervalFor(PatternId pattern) {
   switch (pattern) {
     case PatternId::Alert:
-      return 120;
+      return 60;
     case PatternId::Chase:
       return 180;
     case PatternId::Cycle:
@@ -33,6 +33,7 @@ unsigned long animationIntervalFor(PatternId pattern) {
     case PatternId::Heartbeat:
       return 130;
     case PatternId::Blink:
+      
     default:
       return Config::kAnimationIntervalMs;
   }
@@ -68,12 +69,12 @@ void applyAutoPattern(DeviceState& state) {
     state.sensors.temperatureC >= Config::kTemperatureAlertC ||
     state.sensors.buttonPressed
   ) {
-    state.pattern = PatternId::Alert;
+    state.pattern = PatternId::Chase;
     return;
   }
 
   if (state.sensors.temperatureC >= Config::kTemperatureWarningC) {
-    state.pattern = PatternId::Chase;
+    state.pattern = PatternId::Pulse;
     return;
   }
 
@@ -125,10 +126,17 @@ void stepCyclePattern(DeviceState& state) {
 }
 
 void stepAlertPattern(DeviceState& state) {
-  if (g_animationStep % 2 == 0) {
-    setBuffer(state, 255, 0, 0);
-  } else {
-    setBuffer(state, 255, 255, 0);
+  switch (g_animationStep % 6) {
+    case 0:
+    case 2:
+      setBuffer(state, 255, 0, 0);       // red flash
+      break;
+    case 4:
+      setBuffer(state, 255, 255, 255);   // panic flash
+      break;
+    default:
+      clearLedBuffer(state.leds);
+      break;
   }
 }
 

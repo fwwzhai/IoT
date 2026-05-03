@@ -37,6 +37,16 @@ The structure follows the lab-style PlatformIO layout for firmware, with separat
 4. Open:
    `http://127.0.0.1:5000`
 
+### Flask dashboard with Docker
+
+1. Open `COM3505_Assignment`
+2. Build the image:
+   `docker build -t com3505-dashboard .`
+3. Run the container:
+   `docker run --rm -p 5000:5000 com3505-dashboard`
+4. Open:
+   `http://127.0.0.1:5000`
+
 ### ESP32 firmware
 
 1. Copy `firmware/include/Secrets.example.h` to `firmware/include/Secrets.h`
@@ -59,3 +69,10 @@ The structure follows the lab-style PlatformIO layout for firmware, with separat
 - Button input remains live on `GPIO5`
 - In `manual` mode, pressing the button cycles to the next LED pattern locally
 - Dashboard graph, controls, and server sync are live
+
+## Submission Notes
+
+- Submit the `COM3505_Assignment` project code, not the lab folders
+- Do not submit `firmware/include/Secrets.h` with real Wi-Fi credentials
+- Keep `firmware/include/Secrets.example.h` as the template file in the repo
+- Docker support is for the Flask dashboard only; the ESP32 firmware still runs normally through PlatformIO
