@@ -4,7 +4,7 @@
 // This module is responsible for:
 //  - station-mode Wi-Fi connection management
 //  - reconnect logic
-//  - future Flask API synchronisation
+//  - Flask API synchronisation
 
 #ifndef NETWORK_H
 #define NETWORK_H

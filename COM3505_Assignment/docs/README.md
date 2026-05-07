@@ -1,8 +1,7 @@
 # Assignment Docs
 
-This folder will hold submission-support material:
+This folder stores submission-support material:
 
 - diagrams
 - report assets
 - demo notes
-

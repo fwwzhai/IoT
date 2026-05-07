@@ -55,7 +55,6 @@ struct SensorState {
 // ---------------------------------------------------------------------------
 // LED buffer
 // Each field represents the logical state of one LED channel.
-// The final assignment may switch this to PWM intensity later.
 // ---------------------------------------------------------------------------
 
 struct LedBuffer {

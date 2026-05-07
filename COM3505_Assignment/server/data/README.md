@@ -1,8 +1,7 @@
 # Server Data
 
-Use this folder later for:
+This folder is reserved for local server data:
 
 - captured sensor history
 - exported demo snapshots
 - local development fixtures
-

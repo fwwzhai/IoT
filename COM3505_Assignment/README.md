@@ -16,7 +16,7 @@ The structure follows the lab-style PlatformIO layout for firmware, with separat
 - `firmware/src/Thing.cpp` top-level device orchestration and shared state
 - `firmware/src/Sensors.cpp` sensor sampling
 - `firmware/src/Patterns.cpp` LED pattern engine
-- `firmware/src/Network.cpp` Wi-Fi and server sync scaffolding
+- `firmware/src/Network.cpp` Wi-Fi and server synchronisation
 - `firmware/include/` shared headers, config, and pin mappings
 
 ## Notes
@@ -52,8 +52,8 @@ The structure follows the lab-style PlatformIO layout for firmware, with separat
 1. Copy `firmware/include/Secrets.example.h` to `firmware/include/Secrets.h`
 2. Set:
    - `kHasRealWifiCredentials = true`
-   - your Wi-Fi SSID/password
-   - your laptop IPv4 address as `SERVER_HOST`
+   - Wi-Fi SSID/password
+   - laptop IPv4 address as `SERVER_HOST`
 3. Wire the current bring-up hardware:
    - TMP36 middle leg -> `A0`
    - push button -> `GPIO5`, other side -> `GND` (uses `INPUT_PULLUP`)

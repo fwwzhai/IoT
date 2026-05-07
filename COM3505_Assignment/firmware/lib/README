@@ -1,6 +1,5 @@
 
 Project-specific libraries live here.
 
-Use this folder later if the firmware needs reusable modules that should
-not sit directly in `src/`.
-
+Reusable firmware modules can be placed here when they are separate from the
+main `src/` application code.

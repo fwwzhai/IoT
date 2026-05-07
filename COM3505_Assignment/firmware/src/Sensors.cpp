@@ -1,7 +1,7 @@
 // Sensors.cpp
 // COM3505 assignment sensor module
 //
-// This module follows the sensor style used in the later labs:
+// This module follows the lab sensor pattern:
 // configure ADC once, then sample the inputs on a timed schedule.
 
 #include "Sensors.h"

@@ -1,7 +1,7 @@
 #pragma once
 
-// Copy this file to Secrets.h and fill in your real values locally.
-// Do not commit Secrets.h with live credentials.
+// Local Secrets.h stores Wi-Fi and Flask server settings.
+// The live Secrets.h file stays untracked to keep credentials private.
 
 namespace Secrets {
 constexpr bool kHasRealWifiCredentials = false;

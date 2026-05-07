@@ -1,8 +1,8 @@
 // Network.cpp
 // COM3505 assignment network module
 //
-// This file manages Wi-Fi connection status and provides the placeholder
-// structure for future communication with the Flask backend.
+// This file manages Wi-Fi connection status and HTTP synchronisation with
+// the Flask dashboard.
 
 #include "Network.h"
 
@@ -34,7 +34,7 @@ void beginWifiConnection() {
 
 // ---------------------------------------------------------------------------
 // canUseRealWifi()
-// Helper for deciding whether we should even attempt a network connection.
+// Check whether local Wi-Fi credentials are available.
 // ---------------------------------------------------------------------------
 
 bool canUseRealWifi() {
