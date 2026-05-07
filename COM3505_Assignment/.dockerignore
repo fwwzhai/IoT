@@ -1,8 +1,10 @@
 .git
 .gitignore
 .pylibs/
+.venv_platformio/
 docs/
 firmware/
+__pycache__/
 server/__pycache__/
 server/.venv/
 server/.pytest_cache/

@@ -1,78 +1,79 @@
-# COM3505 Assignment Workspace
+# COM3505 Assignment
 
-This folder is the working tree for the assignment build.
+ESP32-S3 temperature monitoring system with a TMP36 sensor, LED pattern output,
+Flask backend, and AJAX-updated web dashboard.
 
-The structure follows the lab-style PlatformIO layout for firmware, with separate folders for the Flask server and submission assets.
-
-## Layout
+## Contents
 
 - `firmware/` ESP32 PlatformIO project
 - `server/` Flask backend and dashboard
-- `docs/` report, diagrams, and demo assets
+- `docs/` supporting project files
+- `Dockerfile` Flask dashboard container
 
-## Firmware Layout
+## Run Dashboard
 
-- `firmware/src/main.cpp` Arduino entry point only
-- `firmware/src/Thing.cpp` top-level device orchestration and shared state
-- `firmware/src/Sensors.cpp` sensor sampling
-- `firmware/src/Patterns.cpp` LED pattern engine
-- `firmware/src/Network.cpp` Wi-Fi and server synchronisation
-- `firmware/include/` shared headers, config, and pin mappings
+```powershell
+cd COM3505_Assignment
+python -m pip install -r server/requirements.txt
+python server/app.py
+```
 
-## Notes
+Open:
 
-- This workspace is intentionally separate from the lab exercises.
-- The labs are reference material for style and learned techniques only.
-- The product direction is defined in the repo-level `ASSIGNMENT_PRD.md`.
+```text
+http://127.0.0.1:5000
+```
 
-## Quick Start
+Docker alternative:
 
-### Flask dashboard
+```powershell
+cd COM3505_Assignment
+docker build -t com3505-dashboard .
+docker run --rm -p 5000:5000 com3505-dashboard
+```
 
-1. Open `COM3505_Assignment/server`
-2. Install dependencies:
-   `python -m pip install --user -r requirements.txt`
-3. Run the server:
-   `python app.py`
-4. Open:
-   `http://127.0.0.1:5000`
+## Build Firmware
 
-### Flask dashboard with Docker
+```powershell
+cd COM3505_Assignment\firmware
+pio run
+pio run --target upload
+pio device monitor --baud 115200
+```
 
-1. Open `COM3505_Assignment`
-2. Build the image:
-   `docker build -t com3505-dashboard .`
-3. Run the container:
-   `docker run --rm -p 5000:5000 com3505-dashboard`
-4. Open:
-   `http://127.0.0.1:5000`
+Network settings are loaded from `firmware/include/Secrets.h`.
+Use `firmware/include/Secrets.example.h` as the local template.
 
-### ESP32 firmware
+## Network Settings
 
-1. Copy `firmware/include/Secrets.example.h` to `firmware/include/Secrets.h`
-2. Set:
-   - `kHasRealWifiCredentials = true`
-   - Wi-Fi SSID/password
-   - laptop IPv4 address as `SERVER_HOST`
-3. Wire the current bring-up hardware:
-   - TMP36 middle leg -> `A0`
-   - push button -> `GPIO5`, other side -> `GND` (uses `INPUT_PULLUP`)
-   - red LED -> `GPIO6`
-   - yellow LED -> `GPIO9`
-   - green LED -> `GPIO12`
-4. Build from `COM3505_Assignment/firmware`:
-   `pio run`
+The ESP32 and Flask server must be on the same Wi-Fi network.
 
-## Current Hardware Scope
+`firmware/include/Secrets.h` defines:
 
-- The validated sensor path is `TMP36` temperature on `A0`
-- Button input remains live on `GPIO5`
-- In `manual` mode, pressing the button cycles to the next LED pattern locally
-- Dashboard graph, controls, and server sync are live
+```cpp
+namespace Secrets {
+constexpr bool kHasRealWifiCredentials = true;
+constexpr char WIFI_SSID[] = "WIFI_NAME";
+constexpr char WIFI_PASSWORD[] = "WIFI_PASSWORD";
+constexpr char SERVER_HOST[] = "192.168.0.89";
+constexpr uint16_t SERVER_PORT = 5000;
+constexpr char SERVER_BASE_URL[] = "http://192.168.0.89:5000";
+}
+```
 
-## Submission Notes
+`SERVER_HOST` is the LAN IPv4 address printed by Flask when `python server/app.py`
+starts. Example:
 
-- Submit the `COM3505_Assignment` project code, not the lab folders
-- Do not submit `firmware/include/Secrets.h` with real Wi-Fi credentials
-- Keep `firmware/include/Secrets.example.h` as the template file in the repo
-- Docker support is for the Flask dashboard only; the ESP32 firmware still runs normally through PlatformIO
+```text
+Running on http://192.168.0.89:5000
+```
+
+## Pin Map
+
+| Function | Pin |
+| --- | --- |
+| TMP36 signal | `A0` |
+| Button input | `GPIO5` |
+| Red LED | `GPIO6` |
+| Yellow LED | `GPIO9` |
+| Green LED | `GPIO12` |

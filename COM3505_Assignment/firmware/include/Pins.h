@@ -1,9 +1,7 @@
 // Pins.h
 // COM3505 assignment hardware pin map
 //
-// This file centralises the current wiring assumptions. The LED pins are based
-// on the style used in the labs. The sensor pins are still placeholders until
-// the final breadboard wiring is confirmed.
+// This file centralises the firmware pin assignments used by the device.
 
 #ifndef PINS_H
 #define PINS_H
